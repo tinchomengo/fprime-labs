@@ -1,0 +1,3 @@
+[submodule "getting-started/lib/fprime"]
+	path = getting-started/lib/fprime
+	url = https://github.com/nasa/fprime.git
