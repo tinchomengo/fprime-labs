@@ -1,3 +1,7 @@
 [submodule "getting-started/lib/fprime"]
 	path = getting-started/lib/fprime
 	url = https://github.com/nasa/fprime.git
+
+[submodule "imu-altitude-visualization/lib/fprime"]
+	path = imu-altitude-visualization/lib/fprime
+	url = https://github.com/nasa/fprime.git
