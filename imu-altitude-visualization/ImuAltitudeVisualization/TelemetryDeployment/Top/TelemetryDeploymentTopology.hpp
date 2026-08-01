@@ -7,7 +7,7 @@
 #define TELEMETRYDEPLOYMENT_TELEMETRYDEPLOYMENTTOPOLOGY_HPP
 // Included for access to TelemetryDeployment::TopologyState and TelemetryDeployment::ConfigObjects::pingEntries. These definitions are required by the
 // autocoder, but are also used in this hand-coded topology.
-#include <TelemetryDeployment/Top/TelemetryDeploymentTopologyDefs.hpp>
+#include <ImuAltitudeVisualization/TelemetryDeployment/Top/TelemetryDeploymentTopologyDefs.hpp>
 
 namespace TelemetryDeployment {
 /**

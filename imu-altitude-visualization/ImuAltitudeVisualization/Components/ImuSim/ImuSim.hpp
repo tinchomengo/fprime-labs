@@ -7,7 +7,7 @@
 #ifndef ImuAltitudeVisualization_ImuSim_HPP
 #define ImuAltitudeVisualization_ImuSim_HPP
 
-#include "ImuAltitudeVisualization/ImuSim/ImuSimComponentAc.hpp"
+#include "ImuAltitudeVisualization/Components/ImuSim/ImuSimComponentAc.hpp"
 
 namespace ImuAltitudeVisualization {
 

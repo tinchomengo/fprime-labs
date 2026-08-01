@@ -4,7 +4,7 @@
 //
 // ======================================================================
 // Used to access topology functions
-#include <TelemetryDeployment/Top/TelemetryDeploymentTopology.hpp>
+#include <ImuAltitudeVisualization/TelemetryDeployment/Top/TelemetryDeploymentTopology.hpp>
 // OSAL initialization
 #include <Os/Os.hpp>
 // Used for signal handling shutdown

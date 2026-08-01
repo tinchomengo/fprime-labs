@@ -4,9 +4,9 @@
 //
 // ======================================================================
 // Provides access to autocoded functions
-#include <TelemetryDeployment/Top/TelemetryDeploymentTopologyAc.hpp>
+#include <ImuAltitudeVisualization/TelemetryDeployment/Top/TelemetryDeploymentTopologyAc.hpp>
 // Note: Uncomment when using Svc:TlmPacketizer
-//#include <TelemetryDeployment/Top/TelemetryDeploymentPacketsAc.hpp>
+//#include <ImuAltitudeVisualization/TelemetryDeployment/Top/TelemetryDeploymentPacketsAc.hpp>
 
 // Necessary project-specified types
 #include <Fw/Types/MallocAllocator.hpp>

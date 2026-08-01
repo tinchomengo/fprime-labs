@@ -23,7 +23,7 @@
 #include "Svc/Subtopologies/ComCcsds/Ports_ComBufferQueueEnumAc.hpp"
 
 // Include autocoded FPP constants
-#include "TelemetryDeployment/Top/FppConstantsAc.hpp"
+#include "ImuAltitudeVisualization/TelemetryDeployment/Top/FppConstantsAc.hpp"
 
 /**
  * \brief required ping constants

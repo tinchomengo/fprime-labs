@@ -4,7 +4,7 @@
 // \brief  cpp file for ImuSim component implementation class
 // ======================================================================
 
-#include "ImuAltitudeVisualization/ImuSim/ImuSim.hpp"
+#include "ImuAltitudeVisualization/Components/ImuSim/ImuSim.hpp"
 
 namespace ImuAltitudeVisualization {
 
