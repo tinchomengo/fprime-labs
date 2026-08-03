@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>IMU / Altitude Telemetry</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="scene"></div>
+
+    <div id="hud">
+      <h1>IMU / Altitude Telemetry</h1>
+      <p class="subtitle">Live &middot; Simulated (ImuSim)</p>
+      <div class="status" id="status">
+        <span class="dot"></span>
+        <span id="status-text">Disconnected</span>
+      </div>
+      <div class="tiles">
+        <div class="tile">
+          <div class="label">Roll</div>
+          <div class="value">
+            <span id="val-roll">0.0</span><span class="unit">&deg;</span>
+          </div>
+        </div>
+        <div class="tile">
+          <div class="label">Pitch</div>
+          <div class="value">
+            <span id="val-pitch">0.0</span><span class="unit">&deg;</span>
+          </div>
+        </div>
+        <div class="tile">
+          <div class="label">Yaw</div>
+          <div class="value">
+            <span id="val-yaw">0.0</span><span class="unit">&deg;</span>
+          </div>
+        </div>
+        <div class="tile">
+          <div class="label">Altitude</div>
+          <div class="value">
+            <span id="val-altitude">0.0</span><span class="unit">m</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" src="visualizer.js"></script>
+  </body>
+</html>
