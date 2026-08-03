@@ -1,25 +1,21 @@
 module ImuAltitudeVisualization {
-    @ Component for F Prime FSW framework.
+    @ Simulated IMU/altitude telemetry generator producing smooth synthetic orientation and altitude data
     passive component ImuSim {
 
-        ##############################################################################
-        #### Uncomment the following examples to start customizing your component ####
-        ##############################################################################
+        @ Current roll angle, simulated
+        telemetry Roll: F64
 
-        # @ Example async command
-        # async command COMMAND_NAME(param_name: U32)
+        @ Current pitch angle, simulated
+        telemetry Pitch: F64
 
-        # @ Example telemetry counter
-        # telemetry ExampleCounter: U64
+        @ Current yaw angle, simulated
+        telemetry Yaw: F64
 
-        # @ Example event
-        # event ExampleStateEvent(example_state: Fw.On) severity activity high id 0 format "State set to {}"
+        @ Current altitude, simulated
+        telemetry Altitude: F64
 
-        # @ Example port: receiving calls from the rate group
-        # sync input port run: Svc.Sched
-
-        # @ Example parameter
-        # param PARAMETER_NAME: U32
+        @ Scheduled input port, called by the rate group to trigger a new simulated reading
+        sync input port run: Svc.Sched
 
         ###############################################################################
         # Standard AC Ports: Required for Channels, Events, Commands, and Parameters  #

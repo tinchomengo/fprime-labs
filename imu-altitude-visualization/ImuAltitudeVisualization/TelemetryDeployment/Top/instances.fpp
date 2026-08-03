@@ -65,4 +65,6 @@ module TelemetryDeployment {
 
   instance comDriver: Drv.TcpClient base id 0x10014000
 
+  instance imuSim: ImuAltitudeVisualization.ImuSim base id 0x10015000
+
 }
