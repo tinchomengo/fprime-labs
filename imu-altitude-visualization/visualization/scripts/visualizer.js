@@ -86,7 +86,7 @@ scene.add(grid);
 // ----------------------------------------------------------------------
 // Craft representation: loaded from an STL model. `craft` is the group
 // that live telemetry (roll/pitch/yaw/altitude) rotates and repositions
-// every frame; the STL mesh is added as its child once loaded.
+// every frame (the STL mesh is added as its child once loaded)
 // ----------------------------------------------------------------------
 
 const craft = new THREE.Group();

@@ -34,7 +34,13 @@ export const MODEL_ROTATION_CORRECTIONS_DEG = [{ axis: "x", deg: -90 }];
 export const INITIAL_TELEMETRY = { roll: 0, pitch: 0, yaw: 0, altitude: 100 };
 export const ALTITUDE_BASELINE_M = 100;
 export const ALTITUDE_SCENE_SCALE = 0.1; // 1 scene unit per 10m of altitude deviation
-export const SMOOTHING_RATE = 3;
+// Higher = less lag, lower = floatier. This was tuned low (3) back
+// when F' only sent updates once per second (simulated ImuSim), to smooth
+// over the visible "snap" between rare updates. MPU6050 data arrives
+// at aprox 20 times per second, so it needs less smoothing to look right
+
+// tuned back up so the model tracks physical motion almost immediately
+export const SMOOTHING_RATE = 20;
 
 // Bridge WebSocket connection
 
