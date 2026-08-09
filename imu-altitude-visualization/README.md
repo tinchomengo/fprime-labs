@@ -7,4 +7,4 @@ F´ (F Prime) is a component-driven framework that enables rapid development and
 
 ## Hardware Connection
 
-The schematic for the physical connection can be found at [Schematic Drawing](imu-altitude-visualization/diagrams/imu-altitude-visualization-schematic.png)
+The schematic for the physical connection can be found at [Schematic Drawing](diagrams/imu-altitude-visualization-schematic.png)
