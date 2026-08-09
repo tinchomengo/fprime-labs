@@ -2,3 +2,4 @@
 
 # add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/MyComponent")
 add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ImuSim/")
+add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ImuReader/")

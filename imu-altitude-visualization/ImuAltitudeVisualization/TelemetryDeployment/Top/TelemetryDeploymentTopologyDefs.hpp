@@ -25,6 +25,9 @@
 // Include autocoded FPP constants
 #include "ImuAltitudeVisualization/TelemetryDeployment/Top/FppConstantsAc.hpp"
 
+// Needed for the extern mallocator declaration below
+#include "Fw/Types/MallocAllocator.hpp"
+
 /**
  * \brief required ping constants
  *
@@ -65,10 +68,17 @@ struct TopologyState {
     const char* hostname;   //!< Hostname for TCP communication
     U16 port;              //!< Port for TCP communication
     CdhCore::SubtopologyState cdhCore;           //!< Subtopology state for CdhCore
-    ComCcsds::SubtopologyState comCcsds;         //!< Subtopology state for ComCcsds 
+    ComCcsds::SubtopologyState comCcsds;         //!< Subtopology state for ComCcsds
     DataProducts::SubtopologyState dataProducts; //!< Subtopology state for DataProducts
     FileHandling::SubtopologyState fileHandling; //!< Subtopology state for FileHandling
 };
+
+// Declared (defined) in TelemetryDeploymentTopology.cpp. The autocoded topology
+// file - a separate translation unit - references this by name in the
+// uartBufferManager setup phase block, so it needs to be visible via a
+// header, the same way ComCcsds's memAllocator is declared in
+// ComCcsdsSubtopologyConfig.hpp.
+extern Fw::MallocAllocator mallocator;
 
 namespace PingEntries = ::PingEntries;
 }  // namespace TelemetryDeployment

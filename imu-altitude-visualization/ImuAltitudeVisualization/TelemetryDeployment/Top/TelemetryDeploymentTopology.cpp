@@ -10,6 +10,7 @@
 
 // Necessary project-specified types
 #include <Fw/Types/MallocAllocator.hpp>
+#include <cstdio>
 
 // Public functions for use in main program are namespaced with deployment module TelemetryDeployment
 // This is also the namespace where the topology components are instantiated by FPP.
@@ -29,7 +30,13 @@ U32 rateGroup3Context[Svc::ActiveRateGroup::CONNECTION_COUNT_MAX] = {};
 
 enum TopologyConstants {
     COMM_PRIORITY = 34,
+    UART_PRIORITY = 33,
 };
+
+// Serial device for the Pico streaming MPU6050 readings over USB. This path can change on replug (for exmaple to usbmodem1101)
+// if uartDriver fails use ls /dev/cu.usbmodem* and update this
+
+static constexpr const char* UART_DEVICE_PATH = "/dev/cu.usbmodem101";
 
 /**
  * \brief configure/setup components in project-specific way
@@ -65,6 +72,16 @@ void setupTopology(const TopologyState& state) {
     if (state.hostname != nullptr && state.port != 0) {
         comDriver.configure(state.hostname, state.port);
     }
+
+    // Open serial connection to the Pico streaming MPU6050 readings. Baudrate is not necessary here, this is a USB CDC virtual serial port
+    // with no physical UART clock, but termios still requires a value
+
+    const bool uartOpened = uartDriver.open(UART_DEVICE_PATH, Drv::LinuxUartDriver::BAUD_115K,
+                                             Drv::LinuxUartDriver::NO_FLOW, Drv::LinuxUartDriver::PARITY_NONE, 64);
+    if (!uartOpened) {
+        (void)printf("Could not open %s. is the Pico connected? Roll/Pitch/Yaw will stay at 0\n",
+                     UART_DEVICE_PATH);
+    }
     // Project-specific component configuration. Function provided above. May be inlined, if desired.
     configureTopology();
     // Autocoded parameter loading. Function provided by autocoder.
@@ -76,6 +93,10 @@ void setupTopology(const TopologyState& state) {
         Os::TaskString name("ReceiveTask");
         // Uplink is configured for receive so a socket task is started
         comDriver.start(name, COMM_PRIORITY, Default::STACK_SIZE);
+    }
+    if (uartOpened) {
+        // unlike Drv::TcpClient::start(), LinuxUartDriver::start() takes no task name
+        uartDriver.start(UART_PRIORITY, Default::STACK_SIZE);
     }
 }
 
@@ -99,6 +120,8 @@ void teardownTopology(const TopologyState& state) {
     // Other task clean-up.
     comDriver.stop();
     (void)comDriver.join();
+    uartDriver.quitReadThread();
+    (void)uartDriver.join();
 
     // Resource deallocation
     cmdSeq.deallocateBuffer(mallocator);

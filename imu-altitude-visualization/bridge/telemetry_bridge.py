@@ -13,9 +13,11 @@ from fprime_gds.common.pipeline.standard import StandardPipeline
 from fprime_gds.common.utils.config_manager import ConfigManager
 
 CHANNEL_KEYS = {
-    "TelemetryDeployment.imuSim.Roll": "roll",
-    "TelemetryDeployment.imuSim.Pitch": "pitch",
-    "TelemetryDeployment.imuSim.Yaw": "yaw",
+    # MPU6050 sensor data, via ImuReader (firmware/pico-imu)
+    "TelemetryDeployment.imuReader.Roll": "roll",
+    "TelemetryDeployment.imuReader.Pitch": "pitch",
+    "TelemetryDeployment.imuReader.Yaw": "yaw",
+    # altitude still simulated (no barometer on hardware)
     "TelemetryDeployment.imuSim.Altitude": "altitude",
 }
 

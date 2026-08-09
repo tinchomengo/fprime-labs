@@ -33,6 +33,9 @@ module TelemetryDeployment {
     instance comDriver
     instance cmdSeq
     instance imuSim
+    instance imuReader
+    instance uartDriver
+    instance uartBufferManager
 
   # ----------------------------------------------------------------------
   # Pattern graph specifiers
@@ -91,6 +94,17 @@ module TelemetryDeployment {
       comDriver.ready         -> ComCcsds.comStub.drvConnected
     }
 
+    connections ImuReader {
+      # uartDriver buffer allocations
+      uartDriver.allocate   -> uartBufferManager.bufferGetCallee
+      uartDriver.deallocate -> uartBufferManager.bufferSendIn
+
+      # uartDriver <-> ImuReader (receive-only - ImuReader never sends to the Pico)
+      uartDriver.$recv                -> imuReader.drvReceiveIn
+      imuReader.drvReceiveReturnOut    -> uartDriver.recvReturnIn
+      uartDriver.ready                -> imuReader.drvConnected
+    }
+
     connections FileHandling_DataProducts {
       # Data Products to File Downlink
       DataProducts.dpCat.fileOut -> FileHandling.fileDownlink.SendFile
@@ -121,6 +135,7 @@ module TelemetryDeployment {
       rateGroup3.RateGroupMemberOut[2] -> DataProducts.dpBufferManager.schedIn
       rateGroup3.RateGroupMemberOut[3] -> DataProducts.dpWriter.schedIn
       rateGroup3.RateGroupMemberOut[4] -> DataProducts.dpMgr.schedIn
+      rateGroup3.RateGroupMemberOut[5] -> uartDriver.run
     }
 
     connections CdhCore_cmdSeq {
