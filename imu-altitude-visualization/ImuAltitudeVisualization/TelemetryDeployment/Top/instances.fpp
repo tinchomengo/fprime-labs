@@ -67,4 +67,34 @@ module TelemetryDeployment {
 
   instance imuSim: ImuAltitudeVisualization.ImuSim base id 0x10015000
 
+  instance imuReader: ImuAltitudeVisualization.ImuReader base id 0x10016000
+
+  instance uartDriver: Drv.LinuxUartDriver base id 0x10017000
+
+  @ Supplies the receive buffers uartDriver needs. One bin is enough here:
+  @ every MPU6050 line is well under 64 bytes, and a handful of buffers
+  @ gives it a little slack while a line is being processed.
+  instance uartBufferManager: Svc.BufferManager base id 0x10018000 \
+  {
+    phase Fpp.ToCpp.Phases.configObjects """
+    Svc::BufferManager::BufferBins bins;
+    """
+
+    phase Fpp.ToCpp.Phases.configComponents """
+    memset(&ConfigObjects::TelemetryDeployment_uartBufferManager::bins, 0, sizeof(ConfigObjects::TelemetryDeployment_uartBufferManager::bins));
+    ConfigObjects::TelemetryDeployment_uartBufferManager::bins.bins[0].bufferSize = 64;
+    ConfigObjects::TelemetryDeployment_uartBufferManager::bins.bins[0].numBuffers = 4;
+    TelemetryDeployment::uartBufferManager.setup(
+        1,
+        0,
+        TelemetryDeployment::mallocator,
+        ConfigObjects::TelemetryDeployment_uartBufferManager::bins
+    );
+    """
+
+    phase Fpp.ToCpp.Phases.tearDownComponents """
+    TelemetryDeployment::uartBufferManager.cleanup();
+    """
+  }
+
 }

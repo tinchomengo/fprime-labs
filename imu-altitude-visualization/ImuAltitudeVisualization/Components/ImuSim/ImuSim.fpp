@@ -1,15 +1,8 @@
 module ImuAltitudeVisualization {
-    @ Simulated IMU/altitude telemetry generator producing smooth synthetic orientation and altitude data
+    @ Simulated altitude telemetry generator. Roll/Pitch/Yaw used to live here
+    @ too, until they moved to ImuReader (real MPU6050 sensor data); Altitude
+    @ stays simulated since there's no barometer on the real hardware.
     passive component ImuSim {
-
-        @ Current roll angle, simulated
-        telemetry Roll: F64
-
-        @ Current pitch angle, simulated
-        telemetry Pitch: F64
-
-        @ Current yaw angle, simulated
-        telemetry Yaw: F64
 
         @ Current altitude, simulated
         telemetry Altitude: F64

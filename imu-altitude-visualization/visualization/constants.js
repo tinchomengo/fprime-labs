@@ -17,7 +17,7 @@ export const GRID_Y_POSITION = -2;
 
 // 3D model
 
-export const MODEL_PATH = "models/F22jet.stl";
+export const MODEL_PATH = "models/ArduSat.stl";
 export const CRAFT_BODY_COLOR = 0x2a78d6;
 
 // STL files carry no notion of real-world units
@@ -25,16 +25,25 @@ export const CRAFT_BODY_COLOR = 0x2a78d6;
 // own bounding-box center, regardless of how the source file was modeled
 export const MODEL_TARGET_SIZE = 2.4;
 
-// STL files also carry no notion of which way is "up" or "forward"
-// This axis correction, points the nose along -Z with the canopy up.
-export const MODEL_ROTATION_CORRECTIONS_DEG = [{ axis: "x", deg: -90 }];
+// STL files also carry no notion of which way is "up" or "forward" - this
+// F22jet.stl's correction was [{ axis: "x", deg: -90 }].
+export const MODEL_ROTATION_CORRECTIONS_DEG = [
+  { axis: "x", deg: 90 },
+  { axis: "z", deg: 180 },
+];
 
 // Telemetry / animation
 
 export const INITIAL_TELEMETRY = { roll: 0, pitch: 0, yaw: 0, altitude: 100 };
 export const ALTITUDE_BASELINE_M = 100;
 export const ALTITUDE_SCENE_SCALE = 0.1; // 1 scene unit per 10m of altitude deviation
-export const SMOOTHING_RATE = 3;
+// Higher = less lag, lower = floatier.
+// - 3 was tuned for the old simulated ImuSim, which only updated once per
+//   second (too lagged for real sensor data)
+// - 20 is 50ms aprox time (matches theMPU6050's ~50ms (20Hz)) sample interval
+//   so it's visible as discrete snapping between samples rather than smooth motion
+// - 8-10 is the middle ground
+export const SMOOTHING_RATE = 9;
 
 // Bridge WebSocket connection
 
