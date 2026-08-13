@@ -7,11 +7,13 @@ build-fprime-*
 *.template.cpp
 *.template.hpp
 
+# Raspberry build output
+firmware/*/build/
+
 # Misc
-venv/
-fprime-venv/
-.idea/
-.vscode/
+/venv/
+/fprime-venv/
+/.idea/
+/.vscode/
 .DS_Store
 *.gcov
-.env
