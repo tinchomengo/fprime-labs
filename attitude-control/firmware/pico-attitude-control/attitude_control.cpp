@@ -23,8 +23,6 @@ namespace {
 
 // ----------------------------------------------------------------------
 // MPU6050 / I2C - unchanged from the sibling project's firmware
-// (imu-altitude-visualization/firmware/pico-imu), see its docs/08 and
-// docs/09 for the full explanation of every constant and formula here.
 // ----------------------------------------------------------------------
 
 constexpr uint8_t MPU6050_ADDR = 0x68;
@@ -37,7 +35,7 @@ constexpr uint I2C_SDA_PIN = 0;
 constexpr uint I2C_SCL_PIN = 1;
 constexpr uint I2C_BAUDRATE_HZ = 400000;  // 400kHz ("fast mode")
 
-constexpr uint32_t I2C_TIMEOUT_US = 50000;  // 50ms - see sibling project docs/12 case 1
+constexpr uint32_t I2C_TIMEOUT_US = 50000;  // 50ms
 
 constexpr float ACCEL_SENSITIVITY_LSB_PER_G = 16384.0f;
 constexpr float GYRO_SENSITIVITY_LSB_PER_DPS = 131.0f;
@@ -50,7 +48,7 @@ constexpr float COMPLEMENTARY_FILTER_ALPHA = 0.98f;
 // axis orientation. This board has been soldered fresh, in a new physical
 // position (near the servo mechanism) - both the offsets AND the roll/
 // pitch axis-swap below need to be re-verified with the same isolated-
-// axis-testing methodology (see that project's docs/12) once assembled,
+// axis-testing methodology once assembled,
 // not assumed to carry over.
 constexpr float ROLL_MOUNTING_OFFSET_DEG = 0.0f;
 constexpr float PITCH_MOUNTING_OFFSET_DEG = 0.0f;
@@ -153,9 +151,7 @@ void pwm_setup_servo() {
 // TEMPORARY: which computed angle the control loop treats as "the"
 // controlled axis, since the physical mounting orientation (and therefore
 // which formula is actually "roll" vs "pitch" for this servo's rotation
-// axis) hasn't been verified yet. Flip and retest if the servo reacts to
-// the wrong physical motion - same isolated-axis-testing approach as the
-// sibling project's docs/12 case 6.
+// axis) hasn't been verified yet. Flip and retest if the servo reacts to the wrong physical motion
 constexpr bool CONTROLLED_AXIS_IS_ROLL = true;
 
 constexpr float SETPOINT_DEG = 0.0f;  // hold level
