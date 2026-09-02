@@ -367,8 +367,6 @@ const valueEls = {
   orbitAngle: document.getElementById("val-orbit-angle"),
   orbitCount: document.getElementById("val-orbit-count"),
   orbitVelocity: document.getElementById("val-orbit-velocity"),
-  rgMaxTime: document.getElementById("val-rg-max-time"),
-  rgCycleSlips: document.getElementById("val-rg-cycle-slips"),
 };
 
 // F' event log terminal - every event from every component (mode changes,
@@ -543,16 +541,6 @@ function connect() {
         break;
       case "orbitCount":
         targetScalars.orbitCount = value;
-        break;
-      // Framework counters, not simulation state - written straight to the
-      // DOM rather than through targetScalars/displayScalars, since they're
-      // discrete counts (F' only publishes them "on change" to begin with),
-      // not continuous quantities that should ease between samples.
-      case "rgMaxTime":
-        valueEls.rgMaxTime.textContent = value.toFixed(0);
-        break;
-      case "rgCycleSlips":
-        valueEls.rgCycleSlips.textContent = value.toFixed(0);
         break;
       default:
         break;

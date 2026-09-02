@@ -96,10 +96,6 @@ export const INITIAL_TELEMETRY = {
   orbitalPeriodS: 0,
   orbitalVelocity: 0,
   orbitCount: 0,
-  // rgMaxTime/rgCycleSlips aren't listed here: they're framework counters
-  // written straight to the DOM on receipt (see visualizer.js), not eased
-  // simulation state, so there's no JS-side value to seed - the HTML's
-  // static "0" is the only initial value they need.
 };
 
 // Attitude is SLERPed toward each new sample rather than snapped, since the
