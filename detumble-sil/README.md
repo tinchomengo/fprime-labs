@@ -38,25 +38,22 @@ Telemetry streams out through F´/GDS like any other deployment;
   orbit angle, plus numeric tiles for torque, rotational kinetic energy,
   orbit angle/count, and orbital velocity - all read straight off F´
   telemetry channels, not computed client-side.
-- Real F´ framework telemetry, not just simulated physics - all of it from
-  the _onboard_ side (F´ is flight software; the `fprime-gds` window is the
-  separate ground-station tool watching it, standing in for a real RF
-  link): the 10Hz rate group's max cycle time and cycle-slip count
-  (`Svc.ActiveRateGroup`). (A CPU-usage channel was tried too and dropped -
-  it reflects the host laptop's general load, not the flight software's
-  own work, so it never correlated with anything happening in the
-  simulation.)
 - A live terminal panel streaming the _entire_ F´ event log verbatim - mode
   changes, orbit completions, command dispatch/completion, rate group
   health, everything, from every component, not filtered to one subsystem.
-  This is what actually shows command activity (e.g. `KICK` from the
-  Re-kick button): real `OpCodeDispatched`/`OpCodeCompleted` event lines,
-  not just a counter. Wiring this up (well, its command-dispatch lines
-  specifically) surfaced a real gap in the bootstrap-generated topology:
-  `cmdDisp`'s scheduled `run` port was never connected to a rate group, so
-  its _telemetry_ channels (`CommandsDispatched` etc., not used here
-  directly but real F´ channels) could never have published at all. Fixed
-  in `topology.fpp`.
+  Real F´ framework activity, not simulated physics, and all of it from
+  the _onboard_ side (F´ is flight software; the `fprime-gds` window is
+  the separate ground-station tool watching it, standing in for a real RF
+  link). This is what shows command activity (e.g. `KICK` from the
+  Re-kick button): real `OpCodeDispatched`/`OpCodeCompleted` event lines.
+  (Two framework telemetry tiles - rate-group max cycle time and cycle
+  slips - were tried first and dropped: on this light a workload they sat
+  at/near 0 too often to be worth a tile, versus the event log's always-live
+  activity. Wiring up command-dispatch telemetry along the way surfaced a
+  real gap in the bootstrap-generated topology: `cmdDisp`'s scheduled `run`
+  port was never connected to a rate group, so its telemetry channels could
+  never have published at all - independent of the event log, and still
+  fixed, in `topology.fpp`.)
 
 A `KICK` command re-tumbles the body on demand (also reachable from the
 page's "Re-kick" button, relayed back through the bridge), so the detumble
