@@ -8,3 +8,6 @@
 [submodule "attitude-control/lib/fprime"]
 	path = attitude-control/lib/fprime
 	url = https://github.com/nasa/fprime.git
+[submodule "detumble-sil/lib/fprime"]
+	path = detumble-sil/lib/fprime
+	url = https://github.com/nasa/fprime.git
