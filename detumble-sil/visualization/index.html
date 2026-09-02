@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Detumble SIL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="scene"></div>
+
+    <div id="hud">
+      <div class="row">
+        <span class="row-label">detumble-sil</span>
+        <span id="status-text">disconnected</span>
+      </div>
+      <div class="row">
+        <span class="row-label">mode</span>
+        <span id="mode-text">tumbling</span>
+      </div>
+
+      <div class="section-label">attitude</div>
+      <div class="tiles">
+        <div class="tile">
+          <div class="label">|omega|</div>
+          <div class="value"><span id="val-omega">0.0</span><span class="unit">deg/s</span></div>
+        </div>
+        <div class="tile">
+          <div class="label">torque</div>
+          <div class="value"><span id="val-torque">0.0</span><span class="unit">mN&middot;m</span></div>
+        </div>
+        <div class="tile">
+          <div class="label">energy</div>
+          <div class="value"><span id="val-energy">0.000</span><span class="unit">J</span></div>
+        </div>
+      </div>
+      <div class="chart-label">|omega| (deg/s)</div>
+      <canvas id="chart-omega" class="chart" width="240" height="42"></canvas>
+
+      <div class="section-label">orbit</div>
+      <div class="tiles">
+        <div class="tile">
+          <div class="label">angle</div>
+          <div class="value"><span id="val-orbit-angle">0.0</span><span class="unit">deg</span></div>
+        </div>
+        <div class="tile">
+          <div class="label">orbits</div>
+          <div class="value"><span id="val-orbit-count">0.00</span></div>
+        </div>
+        <div class="tile">
+          <div class="label">velocity</div>
+          <div class="value"><span id="val-orbit-velocity">0.00</span><span class="unit">km/s</span></div>
+        </div>
+      </div>
+      <div class="chart-label">orbit angle (deg)</div>
+      <canvas id="chart-orbit-angle" class="chart" width="240" height="42"></canvas>
+      <p class="orbit-summary" id="orbit-summary">circular orbit &middot; &ndash;</p>
+
+      <div class="section-label">f&#180; framework</div>
+      <p class="orbit-summary">onboard flight software, not simulated data</p>
+      <div class="tiles">
+        <div class="tile">
+          <div class="label">max cycle</div>
+          <div class="value"><span id="val-rg-max-time">0</span><span class="unit">&micro;s</span></div>
+        </div>
+        <div class="tile">
+          <div class="label">slips</div>
+          <div class="value"><span id="val-rg-cycle-slips">0</span></div>
+        </div>
+      </div>
+
+      <button id="kick-btn">re-kick</button>
+    </div>
+
+    <div id="terminal">
+      <div id="terminal-header">f&#180; event log</div>
+      <div id="terminal-log"></div>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" src="scripts/visualizer.js"></script>
+  </body>
+</html>
