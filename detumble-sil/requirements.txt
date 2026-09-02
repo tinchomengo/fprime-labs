@@ -1,0 +1,8 @@
+# Source tag requirements:
+# -r https://raw.githubusercontent.com/nasa/fprime/refs/tags/v4.2.2/requirements.txt
+
+# Local requirements:
+-r ./lib/fprime/requirements.txt
+
+# Bridges DetumbleSim's F' telemetry to the three.js visualization (see bridge/telemetry_bridge.py)
+websockets==17.0.1
