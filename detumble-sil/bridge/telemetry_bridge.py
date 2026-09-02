@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Bridges F' telemetry (attitude quaternion/rate/mode from DetumbleSim, orbital
-position/angle from OrbitPropagator, rate-group timing from the framework
-itself) AND the full F' event log (every event from every component - mode
-changes, orbit completions, command dispatch, rate group health, ...) to a
-WebSocket for the three.js frontend, and relays a "KICK" message the other
-way as the KICK command (re-tumble on demand)."""
+"""Bridges F' telemetry (attitude quaternion/rate/mode from DetumbleSim,
+orbital position/angle from OrbitPropagator) AND the full F' event log
+(every event from every component - mode changes, orbit completions,
+command dispatch, rate group health, ...) to a WebSocket for the three.js
+frontend, and relays a "KICK" message the other way as the KICK command
+(re-tumble on demand)."""
 
 import argparse
 import asyncio
@@ -34,14 +34,11 @@ CHANNEL_KEYS = {
     "TelemetryDeployment.orbitPropagator.OrbitalPeriodS": "orbitalPeriodS",
     "TelemetryDeployment.orbitPropagator.OrbitalVelocity": "orbitalVelocity",
     "TelemetryDeployment.orbitPropagator.OrbitCount": "orbitCount",
-    # F' framework telemetry (Svc.ActiveRateGroup, built in - not something
-    # this project computes) for the 10Hz rate group driving DetumbleSim and
-    # OrbitPropagator: real-time health of that loop, not simulated data.
-    "TelemetryDeployment.rateGroup1.RgMaxTime": "rgMaxTime",
-    "TelemetryDeployment.rateGroup1.RgCycleSlips": "rgCycleSlips",
-    # (Command-dispatch activity is no longer a tile here - it's on the
-    # terminal instead, as the actual OpCodeDispatched/OpCodeCompleted event
-    # lines, which read far better than a bare counter.)
+    # (No F' framework telemetry tiles here anymore - RgMaxTime/RgCycleSlips
+    # sat at 0 too often to be worth a tile, and command-dispatch activity
+    # reads far better as the actual OpCodeDispatched/OpCodeCompleted event
+    # lines on the terminal than as a bare counter. See the event log
+    # instead - it still surfaces real F' framework activity, verbatim.)
 }
 
 KICK_COMMAND = "TelemetryDeployment.detumbleSim.KICK"
