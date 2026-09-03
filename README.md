@@ -16,4 +16,8 @@ Each project is independent from each other, meaning that there's no 'inter-proj
 
 - **[imu-altitude-visualization/](imu-altitude-visualization/)** IMU telemetry pipeline with live 3D visualization. An `ImuReader`/`ImuSim` F´ component (`ImuAltitudeVisualization` deployment) ingests IMU data (from Pico firmware in `firmware/pico-imu`, or a simulator), a Python `bridge/telemetry_bridge.py` relays telemetry from F´ GDS to a WebSocket, and a three.js page in `visualization/` renders it live in the browser.
 
-- **[detumble-sil/](detumble-sil/)** — ADCS demo, entirely in F´, no hardware. `DetumbleSim` simulates a tumbling rigid body under a rate-damping control torque, closing the loop every cycle (`KICK` re-tumbles it on demand); `OrbitPropagator` independently propagates a circular Kepler orbit, radius/period derived at runtime. The same telemetry-bridge + three.js pattern as `imu-altitude-visualization` renders a real CubeSat STL live in the browser, orbiting a to-scale Earth, with rolling analytics charts.
+  <video src="https://raw.githubusercontent.com/tinchomengo/fprime-labs/main/imu-altitude-visualization/media/imu-altitude-visualization.mp4" controls width="700"></video>
+
+- **[detumble-sil/](detumble-sil/)** ADCS demo, entirely in F´, no hardware. `DetumbleSim` simulates a tumbling rigid body under a rate-damping control torque, closing the loop every cycle (`KICK` re-tumbles it on demand); `OrbitPropagator` independently propagates a circular Kepler orbit, radius/period derived at runtime. The same telemetry-bridge + three.js pattern as `imu-altitude-visualization` renders a real CubeSat STL live in the browser, orbiting a to-scale Earth, with rolling analytics charts.
+
+  <video src="https://raw.githubusercontent.com/tinchomengo/fprime-labs/main/detumble-sil/media/detumble-sil.mp4" controls width="700"></video>
