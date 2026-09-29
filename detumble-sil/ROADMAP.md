@@ -74,8 +74,8 @@ ADCS actually operates.
 
 A small autonomous mode manager (its own states and transition logic —
 not a copy of any other project's) that selects between something like
-Standby / Detumble / Pointing based on estimated rate, reference validity,
-and simple health signals, and issues the corresponding command.
+Standby / Detumble / Pointing / Safe based on estimated rate, reference
+validity, and simple health signals, and issues the corresponding command.
 
 ## Stretch goals (unscheduled)
 
