@@ -11,3 +11,6 @@
 [submodule "detumble-sil/lib/fprime"]
 	path = detumble-sil/lib/fprime
 	url = https://github.com/nasa/fprime.git
+[submodule "iss-tracker/lib/fprime"]
+	path = iss-tracker/lib/fprime
+	url = https://github.com/nasa/fprime.git
