@@ -7,6 +7,9 @@ build-fprime-*
 *.template.cpp
 *.template.hpp
 
+# Raspberry build output
+firmware/*/build/
+
 # Misc
 /venv/
 /fprime-venv/
