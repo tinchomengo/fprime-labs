@@ -33,6 +33,10 @@ module TrackerDeployment {
     instance comDriver
     instance cmdSeq
     instance sgp4Propagator
+    instance antennaController
+    instance picoLink
+    instance uartDriver
+    instance uartBufferManager
 
   # ----------------------------------------------------------------------
   # Pattern graph specifiers
@@ -109,6 +113,8 @@ module TrackerDeployment {
       rateGroup1.RateGroupMemberOut[3] -> ComCcsds.comQueue.run
       rateGroup1.RateGroupMemberOut[4] -> ComCcsds.aggregator.timeout
       rateGroup1.RateGroupMemberOut[5] -> sgp4Propagator.schedIn
+      # After the propagator: sends PING only if this cycle sent no SET
+      rateGroup1.RateGroupMemberOut[6] -> picoLink.schedIn
 
       # Rate group 2
       rateGroupDriver.CycleOut[Ports_RateGroups.rateGroup2] -> rateGroup2.CycleIn
@@ -121,6 +127,25 @@ module TrackerDeployment {
       rateGroup3.RateGroupMemberOut[2] -> DataProducts.dpBufferManager.schedIn
       rateGroup3.RateGroupMemberOut[3] -> DataProducts.dpWriter.schedIn
       rateGroup3.RateGroupMemberOut[4] -> DataProducts.dpMgr.schedIn
+      rateGroup3.RateGroupMemberOut[5] -> uartDriver.run
+    }
+
+    connections Tracking {
+      # Each cycle: look angle, then the mount command it leads to
+      sgp4Propagator.lookAngleOut -> antennaController.lookAngleIn
+      antennaController.mountOut -> picoLink.mountIn
+    }
+
+    connections PicoSerial {
+      # uartDriver receive buffers
+      uartDriver.allocate   -> uartBufferManager.bufferGetCallee
+      uartDriver.deallocate -> uartBufferManager.bufferSendIn
+
+      # uartDriver <-> picoLink
+      uartDriver.$recv              -> picoLink.drvReceiveIn
+      picoLink.drvReceiveReturnOut  -> uartDriver.recvReturnIn
+      uartDriver.ready              -> picoLink.drvConnected
+      picoLink.drvSendOut           -> uartDriver.$send
     }
 
     connections CdhCore_cmdSeq {

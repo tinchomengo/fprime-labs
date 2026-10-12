@@ -11,6 +11,11 @@
 // Necessary project-specified types
 #include <Fw/Types/MallocAllocator.hpp>
 
+#include <glob.h>
+#include <cstdio>
+#include <cstdlib>
+#include <string>
+
 // Public functions for use in main program are namespaced with deployment module TrackerDeployment
 // This is also the namespace where the topology components are instantiated by FPP.
 namespace TrackerDeployment {
@@ -29,7 +34,36 @@ U32 rateGroup3Context[Svc::ActiveRateGroup::CONNECTION_COUNT_MAX] = {};
 
 enum TopologyConstants {
     COMM_PRIORITY = 34,
+    UART_PRIORITY = 33,
 };
+
+// The Pico's USB serial port. Its name changes with the USB socket used
+// (/dev/cu.usbmodem101, /dev/cu.usbmodem1101, ...), so it's found at
+// startup. Set PICO_SERIAL_PORT to choose one explicitly.
+static constexpr const char* PICO_SERIAL_ENV = "PICO_SERIAL_PORT";
+static constexpr const char* PICO_SERIAL_PATTERN = "/dev/cu.usbmodem*";
+
+//! Returns the Pico's serial port, or an empty string if none is found
+static std::string findPicoSerialPort() {
+    const char* fromEnvironment = std::getenv(PICO_SERIAL_ENV);
+    if (fromEnvironment != nullptr && fromEnvironment[0] != '\0') {
+        return fromEnvironment;
+    }
+    std::string found;
+    glob_t matches;
+    if (glob(PICO_SERIAL_PATTERN, 0, nullptr, &matches) == 0 && matches.gl_pathc > 0) {
+        found = matches.gl_pathv[0];
+        if (matches.gl_pathc > 1) {
+            (void)printf("[PicoLink] Several %s ports found; using %s (set %s to choose)\n", PICO_SERIAL_PATTERN,
+                         found.c_str(), PICO_SERIAL_ENV);
+        }
+    }
+    globfree(&matches);
+    return found;
+}
+
+//! Whether the serial port was opened, so its read thread is started and stopped
+static bool s_uartOpened = false;
 
 /**
  * \brief configure/setup components in project-specific way
@@ -65,6 +99,20 @@ void setupTopology(const TopologyState& state) {
     if (state.hostname != nullptr && state.port != 0) {
         comDriver.configure(state.hostname, state.port);
     }
+
+    // Open the Pico's USB serial port. It's a USB CDC virtual port, so the baud
+    // rate has no effect, but termios still requires one. On success the driver
+    // signals picoLink (drvConnected), which then starts the heartbeat.
+    const std::string picoPort = findPicoSerialPort();
+    if (picoPort.empty()) {
+        (void)printf("[PicoLink] No %s port found: is the Pico plugged in? The mount won't move.\n",
+                     PICO_SERIAL_PATTERN);
+    } else {
+        s_uartOpened = uartDriver.open(picoPort.c_str(), Drv::LinuxUartDriver::BAUD_115K,
+                                       Drv::LinuxUartDriver::NO_FLOW, Drv::LinuxUartDriver::PARITY_NONE, 64);
+        (void)printf("[PicoLink] %s %s\n", s_uartOpened ? "Opened" : "Could not open", picoPort.c_str());
+    }
+
     // Project-specific component configuration. Function provided above. May be inlined, if desired.
     configureTopology();
     // Autocoded parameter loading. Function provided by autocoder.
@@ -76,6 +124,10 @@ void setupTopology(const TopologyState& state) {
         Os::TaskString name("ReceiveTask");
         // Uplink is configured for receive so a socket task is started
         comDriver.start(name, COMM_PRIORITY, Default::STACK_SIZE);
+    }
+    if (s_uartOpened) {
+        // Unlike Drv::TcpClient::start(), LinuxUartDriver::start() takes no task name
+        uartDriver.start(UART_PRIORITY, Default::STACK_SIZE);
     }
 }
 
@@ -99,6 +151,10 @@ void teardownTopology(const TopologyState& state) {
     // Other task clean-up.
     comDriver.stop();
     (void)comDriver.join();
+    if (s_uartOpened) {
+        uartDriver.quitReadThread();
+        (void)uartDriver.join();
+    }
 
     // Resource deallocation
     cmdSeq.deallocateBuffer(mallocator);

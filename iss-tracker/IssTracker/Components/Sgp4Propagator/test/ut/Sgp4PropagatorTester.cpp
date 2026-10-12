@@ -88,6 +88,7 @@ void Sgp4PropagatorTester ::testNoTle() {
     ASSERT_EVENTS_NoTleLoaded_SIZE(1);
     ASSERT_TLM_Azimuth_SIZE(0);
     ASSERT_TLM_Elevation_SIZE(0);
+    ASSERT_from_lookAngleOut_SIZE(0);
     ASSERT_TLM_SimClockActive_SIZE(2);
 
     this->sendCmd_PREDICT_PASS(0, 5);
@@ -261,6 +262,10 @@ void Sgp4PropagatorTester ::expectLookAngle(const Oracle::LookSample& sample) {
         << sample.utc;
     EXPECT_NEAR(this->tlmHistory_RangeKm->at(0).arg, sample.rangeKm, Oracle::RANGE_TOLERANCE_KM) << sample.utc;
     EXPECT_STREQ(this->tlmHistory_PropagationTime->at(0).arg.toChar(), sample.utc);
+
+    // The same look angle goes out to the AntennaController
+    ASSERT_from_lookAngleOut_SIZE(1);
+    ASSERT_from_lookAngleOut(0, azimuth, elevation);
 }
 
 }  // namespace IssTracker

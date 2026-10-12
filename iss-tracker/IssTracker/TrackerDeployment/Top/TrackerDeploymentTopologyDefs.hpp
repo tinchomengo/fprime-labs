@@ -25,6 +25,9 @@
 // Include autocoded FPP constants
 #include "IssTracker/TrackerDeployment/Top/FppConstantsAc.hpp"
 
+// Needed for the extern mallocator declaration below
+#include "Fw/Types/MallocAllocator.hpp"
+
 /**
  * \brief required ping constants
  *
@@ -69,6 +72,11 @@ struct TopologyState {
     DataProducts::SubtopologyState dataProducts; //!< Subtopology state for DataProducts
     FileHandling::SubtopologyState fileHandling; //!< Subtopology state for FileHandling
 };
+
+// Defined in TrackerDeploymentTopology.cpp. The autocoded topology file, a
+// separate translation unit, uses it in the uartBufferManager setup phase in
+// instances.fpp, so it has to be visible through a header.
+extern Fw::MallocAllocator mallocator;
 
 namespace PingEntries = ::PingEntries;
 }  // namespace TrackerDeployment

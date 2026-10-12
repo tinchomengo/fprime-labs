@@ -18,6 +18,9 @@ module IssTracker {
         @ Called by the rate group to propagate and publish the current look angle
         sync input port schedIn: Svc.Sched
 
+        @ The look angle computed each cycle, for the AntennaController
+        output port lookAngleOut: LookAngle
+
         # ----------------------------------------------------------------------
         # Commands
         # ----------------------------------------------------------------------

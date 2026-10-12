@@ -81,6 +81,10 @@ void Sgp4Propagator ::schedIn_handler(FwIndexType portNum, U32 context) {
     this->tlmWrite_RangeRateKmS(angle.rangeRateKmS);
     this->tlmWrite_PropagationTime(Fw::TlmString(timeText));
     this->tlmWrite_TleAgeHours((now - this->m_tleEpochSeconds) / SECONDS_PER_HOUR);
+
+    if (this->isConnected_lookAngleOut_OutputPort(0)) {
+        this->lookAngleOut_out(0, angle.azimuthDeg, angle.elevationDeg);
+    }
 }
 
 // ----------------------------------------------------------------------

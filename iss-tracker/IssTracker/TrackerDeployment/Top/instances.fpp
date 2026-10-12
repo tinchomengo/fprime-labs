@@ -67,4 +67,36 @@ module TrackerDeployment {
 
   instance sgp4Propagator: IssTracker.Sgp4Propagator base id 0x10015000
 
+  instance antennaController: IssTracker.AntennaController base id 0x10016000
+
+  instance picoLink: IssTracker.PicoLink base id 0x10017000
+
+  @ USB serial to the Pico. Opened in TrackerDeploymentTopology.cpp.
+  instance uartDriver: Drv.LinuxUartDriver base id 0x10018000
+
+  @ Receive buffers for uartDriver. The Pico's lines are under 64 bytes;
+  @ a few buffers give slack while one is being processed.
+  instance uartBufferManager: Svc.BufferManager base id 0x10019000 \
+  {
+    phase Fpp.ToCpp.Phases.configObjects """
+    Svc::BufferManager::BufferBins bins;
+    """
+
+    phase Fpp.ToCpp.Phases.configComponents """
+    memset(&ConfigObjects::TrackerDeployment_uartBufferManager::bins, 0, sizeof(ConfigObjects::TrackerDeployment_uartBufferManager::bins));
+    ConfigObjects::TrackerDeployment_uartBufferManager::bins.bins[0].bufferSize = 64;
+    ConfigObjects::TrackerDeployment_uartBufferManager::bins.bins[0].numBuffers = 8;
+    TrackerDeployment::uartBufferManager.setup(
+        1,
+        0,
+        TrackerDeployment::mallocator,
+        ConfigObjects::TrackerDeployment_uartBufferManager::bins
+    );
+    """
+
+    phase Fpp.ToCpp.Phases.tearDownComponents """
+    TrackerDeployment::uartBufferManager.cleanup();
+    """
+  }
+
 }
