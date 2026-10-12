@@ -9,12 +9,19 @@ An az/el mount that points a stick at the International Space Station. A
 stepper turns it in azimuth and a servo tilts it in elevation, driven by a
 Raspberry Pi Pico 2 W.
 
-See [ROADMAP.md](ROADMAP.md) for the stages and [HARDWARE.md](HARDWARE.md)
-for the power sequence, calibration and bring-up notes.
+The F´ deployment propagates the ISS orbit with SGP4 (`Sgp4Propagator`),
+decides where the mount should point (`AntennaController`) and sends the
+commands to the Pico over USB serial (`PicoLink`).
+
+See [COMMANDS.md](COMMANDS.md) to run the simulated pass test,
+[ROADMAP.md](ROADMAP.md) for the stages and [HARDWARE.md](HARDWARE.md) for
+the power sequence, calibration and bring-up notes.
 
 ## Layout
 
-- `IssTracker/`: F´ components and deployments.
+- `IssTracker/Components/`: the F´ components, each with unit tests.
+- `IssTracker/TrackerDeployment/`: the deployment. `sequences/` has the
+  simulated pass test.
 - `firmware/pico-tracker/`: Pico 2 W firmware that points the mount on
   commands received over USB serial. The protocol is described in
   `tracker_core.hpp`; `test/` has a host test for it.

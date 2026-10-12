@@ -11,29 +11,33 @@ finished before the next one starts.
 - `firmware/pico-tracker-bringup`: a fixed test loop on both axes.
 - F´ project scaffolded.
 
-## Stage 1 — Orbit propagation (planned)
+## Stage 1 — Orbit propagation (done)
 
-Compute the ISS azimuth and elevation for an observer from a TLE using
-SGP4, and predict upcoming passes. Results are checked against an
-independent reference implementation.
+`Sgp4Propagator` computes the ISS azimuth and elevation for an observer
+from a TLE using SGP4, and predicts passes. Its results are checked against
+Skyfield in the unit tests.
 
-## Stage 2 — Pico firmware (planned)
+## Stage 2 — Pico firmware (done)
 
-Replace the test loop with a serial interface so the host can command the
-mount, with position limits enforced on the Pico.
+`firmware/pico-tracker` takes pointing commands over USB serial, with
+position limits and a heartbeat enforced on the Pico.
 
-## Stage 3 — F´ integration (planned)
+## Stage 3 — F´ integration (in progress)
 
-F´ components for tracking and fault handling, and a browser view of the
-pass.
+- Done: `AntennaController` and `PicoLink` connect the propagator to the
+  mount. A simulated pass test drives the mount through a real ISS pass
+  seen from a virtual observer (see [COMMANDS.md](COMMANDS.md)).
+- Next: tracking from real data (observer location, current TLE, real
+  clock), and a browser view of the pass.
 
 ## Stage 4 — Demo (planned)
 
-Track a visible ISS pass.
+Track an ISS pass.
 
 ## Simplifications
 
 - Azimuth is open-loop: steps are counted from a manual north alignment,
   with no encoder.
+- Azimuth travel is limited to ±90° by the servo cable.
 - SGP4 accuracy depends on the age of the TLE.
 - Elevation calibration is linear and set by eye.

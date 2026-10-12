@@ -65,6 +65,16 @@ void Sgp4PropagatorTester ::testLoadTleRejectsGarbage() {
     ASSERT_EVENTS_NoTleLoaded_SIZE(1);
     ASSERT_TLM_Azimuth_SIZE(0);
 
+    // Collapsed spaces (as when copied from a rendered page) are reported as such
+    this->clearHistory();
+    this->sendCmd_LOAD_TLE(0, 2,
+                           Fw::CmdStringArg("1 25544U 98067A 26284.17638745 .00009430 00000+0 18014-3 0 9995"),
+                           Fw::CmdStringArg(Oracle::TLE_LINE2));
+    ASSERT_CMD_RESPONSE(0, Sgp4PropagatorComponentBase::OPCODE_LOAD_TLE, 2, Fw::CmdResponse::EXECUTION_ERROR);
+    ASSERT_EVENTS_TleRejected_SIZE(1);
+    EXPECT_STREQ(this->eventHistory_TleRejected->at(0).reason.toChar(),
+                 "line 1 has 63 characters, expected 69 (spaces collapsed?)");
+
     // A rejected TLE doesn't replace one that is already loaded
     this->loadIssTle();
     this->sendCmd_LOAD_TLE(0, 3, Fw::CmdStringArg("not a"), Fw::CmdStringArg("tle"));

@@ -23,7 +23,7 @@ module IssTracker {
         @ Enables the mount and starts tracking the next (or current) pass
         guarded command TRACK_START
 
-        @ Stops tracking and stows the mount
+        @ Stops tracking and stows the mount. Does nothing if not tracking.
         guarded command TRACK_STOP
 
         # ----------------------------------------------------------------------

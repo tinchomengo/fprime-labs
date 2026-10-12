@@ -6,6 +6,7 @@
 
 #include "IssTracker/Components/Sgp4Propagator/Sgp4Propagator.hpp"
 
+#include <cstdio>
 #include <exception>
 #include <string>
 #include <utility>
@@ -24,6 +25,8 @@ constexpr F64 MAX_ALTITUDE_M = 10000.0;
 constexpr F64 SECONDS_PER_HOUR = 3600.0;
 
 constexpr FwSizeType UTC_TEXT_SIZE = 24;  // "YYYY-MM-DDTHH:MM:SS" plus terminator, with margin
+
+constexpr std::string::size_type TLE_LINE_LENGTH = 69;
 
 //! Command string without trailing spaces, tabs or line endings (left by copy-paste)
 std::string trimTrailing(const Fw::CmdStringArg& arg) {
@@ -95,10 +98,28 @@ void Sgp4Propagator ::LOAD_TLE_cmdHandler(FwOpcodeType opCode,
                                           U32 cmdSeq,
                                           const Fw::CmdStringArg& line1,
                                           const Fw::CmdStringArg& line2) {
+    const std::string text1 = trimTrailing(line1);
+    const std::string text2 = trimTrailing(line2);
+
+    // TLEs are fixed-column. The most common copy-paste damage is collapsed
+    // runs of spaces, which libsgp4 only reports as "Invalid length".
+    const std::string* lines[] = {&text1, &text2};
+    for (int i = 0; i < 2; i++) {
+        if (lines[i]->size() != TLE_LINE_LENGTH) {
+            char reason[80];
+            (void)std::snprintf(reason, sizeof(reason), "line %d has %u characters, expected %u (spaces collapsed?)",
+                                i + 1, static_cast<unsigned>(lines[i]->size()),
+                                static_cast<unsigned>(TLE_LINE_LENGTH));
+            this->log_WARNING_LO_TleRejected(Fw::LogStringArg(reason));
+            this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::EXECUTION_ERROR);
+            return;
+        }
+    }
+
     // libsgp4 reports invalid TLEs and unusable elements as exceptions;
     // the current TLE is only replaced once both steps succeed.
     try {
-        const libsgp4::Tle tle(trimTrailing(line1), trimTrailing(line2));
+        const libsgp4::Tle tle(text1, text2);
         std::unique_ptr<libsgp4::SGP4> sgp4(new libsgp4::SGP4(tle));
 
         this->m_sgp4 = std::move(sgp4);

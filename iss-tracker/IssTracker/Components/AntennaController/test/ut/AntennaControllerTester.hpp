@@ -49,7 +49,7 @@ class AntennaControllerTester final : public AntennaControllerGTestBase {
     //! A full pass: wait, rise, track, set, stow
     void testPassSequence();
 
-    //! TRACK_STOP stows and returns to idle
+    //! TRACK_STOP stows and returns to idle; when already idle it does nothing
     void testTrackStop();
 
     //! Targets outside the azimuth range are skipped and reported

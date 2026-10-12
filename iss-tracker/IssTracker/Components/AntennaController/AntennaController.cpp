@@ -80,9 +80,12 @@ void AntennaController ::TRACK_START_cmdHandler(FwOpcodeType opCode, U32 cmdSeq)
 }
 
 void AntennaController ::TRACK_STOP_cmdHandler(FwOpcodeType opCode, U32 cmdSeq) {
-    this->sendToMount(MountAction::STOW, 0.0, 0.0);
-    this->setPhase(TrackLogic::Phase::IDLE);
-    this->log_ACTIVITY_HI_TrackingStopped();
+    if (this->m_phase != TrackLogic::Phase::IDLE) {
+        this->sendToMount(MountAction::STOW, 0.0, 0.0);
+        this->setPhase(TrackLogic::Phase::IDLE);
+        this->log_ACTIVITY_HI_TrackingStopped();
+    }
+    // Already idle: nothing to stop, and the mount may be disabled
     this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
 }
 

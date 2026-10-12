@@ -101,6 +101,13 @@ void AntennaControllerTester ::testTrackStop() {
     this->clearHistory();
     this->invoke_to_lookAngleIn(0, 0.3, 70.0);
     ASSERT_from_mountOut_SIZE(0);
+
+    // Stopping when already idle does nothing
+    this->clearHistory();
+    this->sendCmd_TRACK_STOP(0, 4);
+    ASSERT_CMD_RESPONSE(0, AntennaControllerComponentBase::OPCODE_TRACK_STOP, 4, Fw::CmdResponse::OK);
+    ASSERT_EVENTS_TrackingStopped_SIZE(0);
+    ASSERT_from_mountOut_SIZE(0);
 }
 
 void AntennaControllerTester ::testAzimuthOutOfRange() {

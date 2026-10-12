@@ -4,8 +4,10 @@
 //   1. Elevation (servo) sweeps slowly 90 -> 45 -> 0 -> 45 -> 90 deg
 //      (viewed from the front: 12 -> 10:30 -> 9 o'clock and back),
 //      holding 1 s at each stop and printing angle + pulse width.
-//   2. Azimuth (stepper) turns +90 deg, pauses, -90 deg back.
-// Azimuth travel stays within +/-90 deg so the servo cable never wraps.
+//   2. Azimuth (stepper) turns 90 deg clockwise from where it started,
+//      pauses, and turns back.
+// Azimuth stays between its start position and +90 deg, so the servo cable
+// never wraps.
 //
 // Elevation is commanded in degrees and clamped to [0, 90], so the stick
 // can never be driven below the horizon.
@@ -143,7 +145,7 @@ int main() {
     servo_init();
 
     sleep_ms(2000);  // time to open the serial monitor
-    printf("Tracker bring-up: EL horizon %.0f us, zenith %.0f us; AZ +/-90 deg\n",
+    printf("Tracker bring-up: EL horizon %.0f us, zenith %.0f us; AZ 0 to +90 deg\n",
            EL_HORIZON_US, EL_ZENITH_US);
 
     gpio_put(EN_PIN, 0);  // energize stepper

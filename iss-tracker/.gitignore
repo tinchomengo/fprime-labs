@@ -10,6 +10,9 @@ build-fprime-*
 # Raspberry build output
 firmware/*/build/
 
+# Compiled command sequences (generated from the .seq files with fprime-seqgen)
+IssTracker/TrackerDeployment/sequences/*.bin
+
 # Misc
 /venv/
 /fprime-venv/
