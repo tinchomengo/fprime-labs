@@ -15,10 +15,15 @@ for the power sequence, calibration and bring-up notes.
 ## Layout
 
 - `IssTracker/`: F´ components and deployments.
+- `firmware/pico-tracker/`: Pico 2 W firmware that points the mount on
+  commands received over USB serial. The protocol is described in
+  `tracker_core.hpp`; `test/` has a host test for it.
 - `firmware/pico-tracker-bringup/`: Pico 2 W bring-up firmware. It sweeps
   elevation through 90°, 45°, 0°, 45° and back to 90°, then turns azimuth
   +90° and back, printing each position over USB serial.
+- `tools/`: scripts that generate the reference values for the unit tests.
 - `lib/fprime`: F´ v4.2.2 (git submodule).
+- `lib/sgp4`: [dnwrnr/sgp4](https://github.com/dnwrnr/sgp4) (git submodule).
 
 ## Building and flashing the firmware
 
@@ -26,18 +31,21 @@ Requires [pico-sdk](https://github.com/raspberrypi/pico-sdk) 2.3.0 with
 `PICO_SDK_PATH` set, and the `arm-none-eabi` toolchain.
 
 ```bash
-cd firmware/pico-tracker-bringup
+cd firmware/pico-tracker
 cmake -B build
 cmake --build build
 ```
 
 1. With 12 V and 5 V off, hold BOOTSEL on the Pico and plug in USB. An
    `RP2350` drive appears.
-2. Copy `build/tracker_bringup.uf2` onto it. The Pico reboots into the new
+2. Copy `build/pico_tracker.uf2` onto it. The Pico reboots into the new
    firmware.
 3. Watch the output with `screen /dev/tty.usbmodem* 115200` (quit with
    `Ctrl-A`, `K`, `y`).
 4. Power on 12 V, then 5 V.
+
+The bring-up firmware builds and flashes the same way, from
+`firmware/pico-tracker-bringup` (`build/tracker_bringup.uf2`).
 
 ## Building the F´ project
 
