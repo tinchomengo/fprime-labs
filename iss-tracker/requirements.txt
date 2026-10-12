@@ -3,3 +3,6 @@
 
 # Local requirements:
 -r ./lib/fprime/requirements.txt
+
+# Independent SGP4 implementation used as the oracle for the Sgp4Propagator tests (see tools/)
+skyfield==1.55

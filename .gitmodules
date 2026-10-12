@@ -14,3 +14,7 @@
 [submodule "iss-tracker/lib/fprime"]
 	path = iss-tracker/lib/fprime
 	url = https://github.com/nasa/fprime.git
+[submodule "iss-tracker/lib/sgp4"]
+	path = iss-tracker/lib/sgp4
+	url = https://github.com/dnwrnr/sgp4.git
+	ignore = dirty
