@@ -21,3 +21,5 @@ Each project is independent from each other, meaning that there's no 'inter-proj
   <img src="detumble-sil/media/detumble-sil.gif" width="720" />
 
 - **[iss-tracker/](iss-tracker/)** Mount that points a stick at the International Space Station in real time. `Sgp4Propagator` propagates the ISS from a CelesTrak TLE with SGP4 and computes its azimuth and elevation for the observer, checked against Skyfield in the unit tests. `AntennaController` turns them into mount commands within the mount's limits, and `PicoLink` sends them over USB serial to a Raspberry Pi Pico 2 W (`firmware/pico-tracker`) that drives a stepper (azimuth) and a servo (elevation). A simulated pass test replays a real ISS pass for a virtual observer through the same components.
+
+  <img src="iss-tracker/media/iss-tracker.gif" width="720" />
