@@ -30,6 +30,9 @@ MountState toTelemetry(PicoProtocol::State state) {
 
 }  // namespace
 
+// Out-of-class definition, required in C++14 when the constant is bound to a reference
+constexpr U32 PicoLink::SILENCE_LIMIT_CYCLES;
+
 // ----------------------------------------------------------------------
 // Component construction and destruction
 // ----------------------------------------------------------------------
@@ -97,6 +100,14 @@ void PicoLink ::schedIn_handler(FwIndexType portNum, U32 context) {
         (void)this->sendLocked(PicoProtocol::Command::PING, 0.0, 0.0);
     }
     this->m_sentThisCycle = false;
+
+    // The Pico sends telemetry 5 times a second; silence means it isn't
+    // running, or the port opened is no longer connected to it
+    this->m_cyclesWithoutData++;
+    if (this->m_cyclesWithoutData >= SILENCE_LIMIT_CYCLES && !this->m_silenceReported) {
+        this->m_silenceReported = true;
+        this->log_WARNING_HI_PicoSilent(this->m_cyclesWithoutData);
+    }
 }
 
 // ----------------------------------------------------------------------
@@ -181,6 +192,17 @@ void PicoLink ::processByte(U8 byte) {
 }
 
 void PicoLink ::handleLine(const char* line) {
+    bool wasSilent = false;
+    {
+        Os::ScopeLock lock(this->m_sendLock);
+        wasSilent = this->m_silenceReported;
+        this->m_cyclesWithoutData = 0;
+        this->m_silenceReported = false;
+    }
+    if (wasSilent) {
+        this->log_ACTIVITY_HI_PicoResponding();
+    }
+
     const PicoProtocol::Line parsed = PicoProtocol::parse(line);
     switch (parsed.kind) {
         case PicoProtocol::Line::Kind::TLM:

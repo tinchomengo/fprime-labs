@@ -3,7 +3,8 @@ module IssTracker {
     @ Turns the propagated az/el into mount commands within the mount's limits.
     @ The decisions are in TrackLogic.cpp: wait on the horizon at the
     @ satellite's azimuth until it rises, follow it while it's up, and stow
-    @ when it sets. Targets outside the mount's azimuth range are skipped.
+    @ when it sets. Targets slightly past the mount's azimuth range are sent
+    @ as the limit; targets further out are skipped.
     passive component AntennaController {
 
         # ----------------------------------------------------------------------
@@ -25,6 +26,15 @@ module IssTracker {
 
         @ Stops tracking and stows the mount. Does nothing if not tracking.
         guarded command TRACK_STOP
+
+        # ----------------------------------------------------------------------
+        # Parameters
+        # ----------------------------------------------------------------------
+
+        @ Compass direction (degrees from true north, 0 to 360) that the mount's
+        @ azimuth zero faces. For a real pass, turn the mount to face the centre
+        @ that PREDICT_PASS reports and set it here. 0 for the simulated pass test.
+        param MOUNT_ZERO_AZ_DEG: F64 default 0.0
 
         # ----------------------------------------------------------------------
         # Telemetry
@@ -65,6 +75,20 @@ module IssTracker {
             severity activity high \
             format "Pass complete; stowing"
 
+        @ The mount's zero direction changed
+        event MountZeroSet(
+            azimuth: F64 @< Compass direction of the mount's zero, degrees
+        ) \
+            severity activity high \
+            format "Mount zero faces {.1f} deg (true north)"
+
+        @ MOUNT_ZERO_AZ_DEG is outside 0 to 360; the previous value is kept
+        event MountZeroInvalid(
+            azimuth: F64 @< Value received
+        ) \
+            severity warning low \
+            format "Mount zero {} deg is outside 0 to 360; keeping the previous value"
+
         @ A target was outside the mount's azimuth range and was skipped
         event AzimuthOutOfRange(
             azimuth: F64 @< Mount azimuth requested, degrees
@@ -87,6 +111,12 @@ module IssTracker {
 
         @ Enables telemetry channels handling
         import Fw.Channel
+
+        @ Port to return the value of a parameter
+        param get port prmGetOut
+
+        @ Port to set the value of a parameter
+        param set port prmSetOut
 
     }
 }

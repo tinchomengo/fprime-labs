@@ -37,10 +37,11 @@ AntennaController ::~AntennaController() {}
 // ----------------------------------------------------------------------
 
 void AntennaController ::lookAngleIn_handler(FwIndexType portNum, F64 azimuthDeg, F64 elevationDeg) {
-    const TrackLogic::Decision decision = TrackLogic::decide(this->m_phase, azimuthDeg, elevationDeg);
+    const TrackLogic::Decision decision =
+        TrackLogic::decide(this->m_phase, azimuthDeg, elevationDeg, this->m_mountZeroDeg);
 
     if (this->m_phase == TrackLogic::Phase::WAITING && decision.nextPhase == TrackLogic::Phase::TRACKING) {
-        this->log_ACTIVITY_HI_PassStarted(TrackLogic::mountAzimuth(azimuthDeg));
+        this->log_ACTIVITY_HI_PassStarted(TrackLogic::mountAzimuth(azimuthDeg, this->m_mountZeroDeg));
     }
 
     switch (decision.action) {
@@ -59,7 +60,7 @@ void AntennaController ::lookAngleIn_handler(FwIndexType portNum, F64 azimuthDeg
     }
 
     if (decision.azimuthOutOfRange) {
-        this->log_WARNING_LO_AzimuthOutOfRange(TrackLogic::mountAzimuth(azimuthDeg));
+        this->log_WARNING_LO_AzimuthOutOfRange(TrackLogic::mountAzimuth(azimuthDeg, this->m_mountZeroDeg));
     }
 
     this->setPhase(decision.nextPhase);
@@ -90,8 +91,32 @@ void AntennaController ::TRACK_STOP_cmdHandler(FwOpcodeType opCode, U32 cmdSeq) 
 }
 
 // ----------------------------------------------------------------------
+// Parameter hooks
+// ----------------------------------------------------------------------
+
+void AntennaController ::parametersLoaded() {
+    this->updateMountZero();
+}
+
+void AntennaController ::parameterUpdated(FwPrmIdType id) {
+    this->updateMountZero();
+}
+
+// ----------------------------------------------------------------------
 // Helpers
 // ----------------------------------------------------------------------
+
+void AntennaController ::updateMountZero() {
+    Fw::ParamValid valid;
+    const F64 mountZero = this->paramGet_MOUNT_ZERO_AZ_DEG(valid);
+    // Written as a negated range check so NaN is rejected too
+    if (!(mountZero >= 0.0 && mountZero < 360.0)) {
+        this->log_WARNING_LO_MountZeroInvalid(mountZero);
+        return;
+    }
+    this->m_mountZeroDeg = mountZero;
+    this->log_ACTIVITY_HI_MountZeroSet(mountZero);
+}
 
 void AntennaController ::sendToMount(MountAction::T action, F64 azimuthDeg, F64 elevationDeg) {
     if (this->isConnected_mountOut_OutputPort(0)) {

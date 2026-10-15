@@ -55,6 +55,9 @@ class AntennaControllerTester final : public AntennaControllerGTestBase {
     //! Targets outside the azimuth range are skipped and reported
     void testAzimuthOutOfRange();
 
+    //! MOUNT_ZERO_AZ_DEG shifts the mount frame; slight overshoots are clamped
+    void testMountZero();
+
   private:
     // ----------------------------------------------------------------------
     // Helper functions

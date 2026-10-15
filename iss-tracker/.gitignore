@@ -13,6 +13,12 @@ firmware/*/build/
 # Compiled command sequences (generated from the .seq files with fprime-seqgen)
 IssTracker/TrackerDeployment/sequences/*.bin
 
+# Saved parameters: holds the observer's real location, keep it local
+PrmDb.dat
+
+# Current TLE, downloaded by tools/fetch_tle.py
+IssTracker/TrackerDeployment/tle/
+
 # Misc
 /venv/
 /fprime-venv/
@@ -20,3 +26,6 @@ IssTracker/TrackerDeployment/sequences/*.bin
 /.vscode/
 .DS_Store
 *.gcov
+
+# Python bytecode
+__pycache__/

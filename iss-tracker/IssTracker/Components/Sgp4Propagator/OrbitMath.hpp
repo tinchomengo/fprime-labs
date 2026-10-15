@@ -18,6 +18,7 @@
 #define IssTracker_OrbitMath_HPP
 
 #include <cstddef>
+#include <string>
 
 #include <libsgp4/DateTime.h>
 #include <libsgp4/SGP4.h>
@@ -48,6 +49,8 @@ struct Pass {
     double maxElevationDeg;   //!< Elevation at TCA
     double aosAzimuthDeg;     //!< Azimuth at AOS
     double losAzimuthDeg;     //!< Azimuth at LOS
+    double azimuthCenterDeg;  //!< Middle of the azimuth swept during the pass, 0 to 360
+    double azimuthSpanDeg;    //!< Azimuth swept during the pass, degrees
 };
 
 //! Unix seconds (UTC) to a libsgp4 DateTime
@@ -68,15 +71,25 @@ void formatUtc(double unixSeconds, char* buffer, std::size_t size);
 //! \return false if SGP4 cannot propagate to that time (e.g. decayed orbit)
 bool lookAngle(const libsgp4::SGP4& sgp4, const Observer& observer, double unixSeconds, LookAngle& result);
 
+//! Extracts TLE line 1 and line 2 from the contents of a TLE file, such as
+//! CelesTrak's three-line format (name, line 1, line 2). Trailing whitespace
+//! and line endings are removed. Lengths are not checked here.
+//! \return false if either line is missing
+bool extractTleLines(const char* text, std::string& line1, std::string& line2);
+
 //! Finds the next pass after \p startUnix, searching up to \p searchHours ahead.
 //! If the satellite is already above the horizon at \p startUnix, returns the
 //! pass in progress (its AOS is then before \p startUnix).
+//! Passes peaking below \p minElevationDeg are skipped.
+//! The azimuth centre and span describe the continuous azimuth path from AOS
+//! to LOS: a mount whose zero faces the centre needs +/- span/2 of travel.
 //! \return false if no pass was found or SGP4 failed during the search
 bool findNextPass(const libsgp4::SGP4& sgp4,
                   const Observer& observer,
                   double startUnix,
                   double searchHours,
-                  Pass& result);
+                  Pass& result,
+                  double minElevationDeg = 0.0);
 
 }  // namespace OrbitMath
 }  // namespace IssTracker

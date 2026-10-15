@@ -34,6 +34,11 @@ TEST(AntennaController, AzimuthOutOfRange) {
     tester.testAzimuthOutOfRange();
 }
 
+TEST(AntennaController, MountZero) {
+    IssTracker::AntennaControllerTester tester;
+    tester.testMountZero();
+}
+
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

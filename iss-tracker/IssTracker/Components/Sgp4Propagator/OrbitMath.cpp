@@ -34,6 +34,10 @@ constexpr double REFINE_TOLERANCE_S = 0.1;
 // Longest an ISS pass can last; bounds the backward search for a pass in progress
 constexpr double MAX_PASS_DURATION_S = 20.0 * 60.0;
 
+// Sampling step for the azimuth range of a pass. Near the zenith the azimuth
+// can swing ~14 deg/s, so the step must be short to follow it continuously.
+constexpr double AZIMUTH_SAMPLE_S = 1.0;
+
 //! Elevation in degrees, or false if SGP4 failed
 bool elevationAt(const libsgp4::SGP4& sgp4, const Observer& observer, double unixSeconds, double& elevationDeg) {
     LookAngle angle;
@@ -107,6 +111,51 @@ bool refinePeak(const libsgp4::SGP4& sgp4,
     return elevationAt(sgp4, observer, peakUnix, peakElevationDeg);
 }
 
+//! Azimuth range swept between AOS and LOS, following the azimuth
+//! continuously (so a path through north isn't split at 0/360).
+bool azimuthRange(const libsgp4::SGP4& sgp4,
+                  const Observer& observer,
+                  double aosUnix,
+                  double losUnix,
+                  double& centerDeg,
+                  double& spanDeg) {
+    LookAngle angle;
+    if (!lookAngle(sgp4, observer, aosUnix, angle)) {
+        return false;
+    }
+    double previous = angle.azimuthDeg;
+    double unwrapped = previous;
+    double lowest = unwrapped;
+    double highest = unwrapped;
+
+    for (double t = aosUnix + AZIMUTH_SAMPLE_S;; t += AZIMUTH_SAMPLE_S) {
+        const double sampleTime = t < losUnix ? t : losUnix;
+        if (!lookAngle(sgp4, observer, sampleTime, angle)) {
+            return false;
+        }
+        double step = angle.azimuthDeg - previous;
+        if (step > 180.0) {
+            step -= 360.0;
+        } else if (step < -180.0) {
+            step += 360.0;
+        }
+        unwrapped += step;
+        previous = angle.azimuthDeg;
+        lowest = std::fmin(lowest, unwrapped);
+        highest = std::fmax(highest, unwrapped);
+        if (sampleTime >= losUnix) {
+            break;
+        }
+    }
+
+    centerDeg = std::fmod(0.5 * (lowest + highest), 360.0);
+    if (centerDeg < 0.0) {
+        centerDeg += 360.0;
+    }
+    spanDeg = highest - lowest;
+    return true;
+}
+
 }  // namespace
 
 libsgp4::DateTime toDateTime(double unixSeconds) {
@@ -163,13 +212,11 @@ bool lookAngle(const libsgp4::SGP4& sgp4, const Observer& observer, double unixS
     }
 }
 
-bool findNextPass(const libsgp4::SGP4& sgp4,
-                  const Observer& observer,
-                  double startUnix,
-                  double searchHours,
-                  Pass& result) {
-    const double endUnix = startUnix + searchHours * 3600.0;
+namespace {
 
+//! The first pass after \p startUnix whose AOS is before \p endUnix (or the
+//! pass in progress at \p startUnix), whatever its peak elevation
+bool findPass(const libsgp4::SGP4& sgp4, const Observer& observer, double startUnix, double endUnix, Pass& result) {
     double elevation = 0.0;
     if (!elevationAt(sgp4, observer, startUnix, elevation)) {
         return false;
@@ -237,7 +284,57 @@ bool findNextPass(const libsgp4::SGP4& sgp4,
         return false;
     }
     result.losAzimuthDeg = angle.azimuthDeg;
-    return true;
+
+    return azimuthRange(sgp4, observer, result.aosUnix, result.losUnix, result.azimuthCenterDeg,
+                        result.azimuthSpanDeg);
+}
+
+}  // namespace
+
+bool findNextPass(const libsgp4::SGP4& sgp4,
+                  const Observer& observer,
+                  double startUnix,
+                  double searchHours,
+                  Pass& result,
+                  double minElevationDeg) {
+    const double endUnix = startUnix + searchHours * 3600.0;
+    double searchFrom = startUnix;
+    while (searchFrom < endUnix) {
+        if (!findPass(sgp4, observer, searchFrom, endUnix, result)) {
+            return false;
+        }
+        if (result.maxElevationDeg >= minElevationDeg) {
+            return true;
+        }
+        // Too low: carry on from just after it sets
+        searchFrom = result.losUnix + 1.0;
+    }
+    return false;
+}
+
+bool extractTleLines(const char* text, std::string& line1, std::string& line2) {
+    bool found1 = false;
+    bool found2 = false;
+    const char* cursor = text;
+    while (*cursor != '\0') {
+        const char* end = cursor;
+        while (*end != '\0' && *end != '\n') {
+            end++;
+        }
+        std::string line(cursor, static_cast<std::size_t>(end - cursor));
+        const std::string::size_type last = line.find_last_not_of(" \t\r");
+        line.erase(last == std::string::npos ? 0 : last + 1);
+
+        if (line.compare(0, 2, "1 ") == 0) {
+            line1 = line;
+            found1 = true;
+        } else if (line.compare(0, 2, "2 ") == 0) {
+            line2 = line;
+            found2 = true;
+        }
+        cursor = (*end == '\n') ? end + 1 : end;
+    }
+    return found1 && found2;
 }
 
 }  // namespace OrbitMath

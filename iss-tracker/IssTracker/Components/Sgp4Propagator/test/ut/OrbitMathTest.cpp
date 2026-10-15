@@ -6,6 +6,7 @@
 
 #include <cmath>
 #include <cstring>
+#include <string>
 
 #include <gtest/gtest.h>
 #include <libsgp4/SGP4.h>
@@ -45,6 +46,10 @@ void expectPassMatchesOracle(const OrbitMath::Pass& pass, const Oracle::PassRefe
     EXPECT_NEAR(pass.tcaUnix, reference.tcaUnix, Oracle::PASS_TIME_TOLERANCE_S);
     EXPECT_NEAR(pass.losUnix, reference.losUnix, Oracle::PASS_TIME_TOLERANCE_S);
     EXPECT_NEAR(pass.maxElevationDeg, reference.maxElevationDeg, Oracle::MAX_ELEVATION_TOLERANCE_DEG);
+    // Compare centres on the circle, so 359.9 and 0.1 are 0.2 apart
+    EXPECT_LT(std::fabs(std::remainder(pass.azimuthCenterDeg - reference.azimuthCenterDeg, 360.0)),
+              Oracle::AZIMUTH_RANGE_TOLERANCE_DEG);
+    EXPECT_NEAR(pass.azimuthSpanDeg, reference.azimuthSpanDeg, Oracle::AZIMUTH_RANGE_TOLERANCE_DEG);
 }
 
 const OrbitMath::Observer VIRTUAL_70{Oracle::VIRTUAL_70_LAT, Oracle::VIRTUAL_70_LON, Oracle::VIRTUAL_70_ALT_M};
@@ -108,6 +113,38 @@ TEST(OrbitMathTime, FormatRoundsToTheSecond) {
 }
 
 // ----------------------------------------------------------------------
+// TLE files
+// ----------------------------------------------------------------------
+
+TEST(OrbitMathTleFile, CelesTrakThreeLineFormat) {
+    // As downloaded from CelesTrak: padded name line, CRLF line endings
+    const std::string text = std::string("ISS (ZARYA)             \r\n") + Oracle::TLE_LINE1 + "\r\n" +
+                             Oracle::TLE_LINE2 + "\r\n";
+    std::string line1;
+    std::string line2;
+    ASSERT_TRUE(OrbitMath::extractTleLines(text.c_str(), line1, line2));
+    EXPECT_EQ(line1, Oracle::TLE_LINE1);
+    EXPECT_EQ(line2, Oracle::TLE_LINE2);
+}
+
+TEST(OrbitMathTleFile, TwoLinesWithoutFinalNewline) {
+    const std::string text = std::string(Oracle::TLE_LINE1) + "\n" + Oracle::TLE_LINE2;
+    std::string line1;
+    std::string line2;
+    ASSERT_TRUE(OrbitMath::extractTleLines(text.c_str(), line1, line2));
+    EXPECT_EQ(line1, Oracle::TLE_LINE1);
+    EXPECT_EQ(line2, Oracle::TLE_LINE2);
+}
+
+TEST(OrbitMathTleFile, MissingLine) {
+    std::string line1;
+    std::string line2;
+    EXPECT_FALSE(OrbitMath::extractTleLines((std::string(Oracle::TLE_LINE1) + "\n").c_str(), line1, line2));
+    EXPECT_FALSE(OrbitMath::extractTleLines("", line1, line2));
+    EXPECT_FALSE(OrbitMath::extractTleLines("<html>No GP data found</html>\n", line1, line2));
+}
+
+// ----------------------------------------------------------------------
 // Look angles
 // ----------------------------------------------------------------------
 
@@ -155,6 +192,29 @@ TEST(OrbitMathPass, ReportsPassInProgress) {
     ASSERT_TRUE(
         OrbitMath::findNextPass(issPropagator(), VIRTUAL_70, Oracle::VIRTUAL_70_PASS.tcaUnix, 24.0, pass));
     expectPassMatchesOracle(pass, Oracle::VIRTUAL_70_PASS);
+}
+
+TEST(OrbitMathPass, MinimumElevationSkipsLowPasses) {
+    // After the 86 deg pass over Buenos Aires, the next three peak at 12.4,
+    // 4.0 and 6.1 deg; the one after that at 24.5 deg (Skyfield)
+    const double start = parsed("2026-10-11T22:25:00");
+    OrbitMath::Pass pass;
+
+    ASSERT_TRUE(OrbitMath::findNextPass(issPropagator(), BUENOS_AIRES, start, 24.0, pass));
+    EXPECT_NEAR(pass.aosUnix, 1791762425.3, Oracle::PASS_TIME_TOLERANCE_S);
+    EXPECT_NEAR(pass.maxElevationDeg, 12.427, Oracle::MAX_ELEVATION_TOLERANCE_DEG);
+
+    ASSERT_TRUE(OrbitMath::findNextPass(issPropagator(), BUENOS_AIRES, start, 24.0, pass, 10.0));
+    EXPECT_NEAR(pass.aosUnix, 1791762425.3, Oracle::PASS_TIME_TOLERANCE_S);
+
+    ASSERT_TRUE(OrbitMath::findNextPass(issPropagator(), BUENOS_AIRES, start, 24.0, pass, 13.0));
+    EXPECT_NEAR(pass.aosUnix, 1791780063.6, Oracle::PASS_TIME_TOLERANCE_S);
+    EXPECT_NEAR(pass.tcaUnix, 1791780378.2, Oracle::PASS_TIME_TOLERANCE_S);
+    EXPECT_NEAR(pass.losUnix, 1791780690.3, Oracle::PASS_TIME_TOLERANCE_S);
+    EXPECT_NEAR(pass.maxElevationDeg, 24.547, Oracle::MAX_ELEVATION_TOLERANCE_DEG);
+
+    // Nothing that high within 2 hours
+    EXPECT_FALSE(OrbitMath::findNextPass(issPropagator(), BUENOS_AIRES, start, 2.0, pass, 13.0));
 }
 
 TEST(OrbitMathPass, NoPassNearTheSouthPole) {

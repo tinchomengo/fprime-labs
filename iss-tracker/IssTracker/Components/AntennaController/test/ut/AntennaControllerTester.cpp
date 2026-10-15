@@ -122,6 +122,41 @@ void AntennaControllerTester ::testAzimuthOutOfRange() {
     ASSERT_TLM_Phase(0, TrackPhase::TRACKING);
 }
 
+void AntennaControllerTester ::testMountZero() {
+    // Mount turned to face south-west, the centre of the 86 deg Buenos Aires pass
+    this->paramSet_MOUNT_ZERO_AZ_DEG(222.9, Fw::ParamValid::VALID);
+    this->component.loadParameters();
+    ASSERT_EVENTS_MountZeroSet_SIZE(1);
+    ASSERT_EVENTS_MountZeroSet(0, 222.9);
+
+    this->startTracking();
+
+    // Rising in the north-west, 0.1 deg past the mount's +90 deg: sent as +90
+    this->invoke_to_lookAngleIn(0, 313.0, 0.5);
+    ASSERT_from_mountOut_SIZE(1);
+    this->expectMountCommand(0, MountAction::SET, 90.0, 0.5);
+    ASSERT_EVENTS_AzimuthOutOfRange_SIZE(0);
+
+    // Overhead-ish, toward the south-west: straight ahead of the mount
+    this->clearHistory();
+    this->invoke_to_lookAngleIn(0, 222.9, 85.0);
+    this->expectMountCommand(0, MountAction::SET, 0.0, 85.0);
+
+    // Behind the mount (north-east): far outside the range, skipped
+    this->clearHistory();
+    this->invoke_to_lookAngleIn(0, 45.0, 30.0);
+    ASSERT_from_mountOut_SIZE(0);
+    ASSERT_EVENTS_AzimuthOutOfRange_SIZE(1);
+
+    // An invalid value is rejected and the previous one kept
+    this->clearHistory();
+    this->paramSet_MOUNT_ZERO_AZ_DEG(400.0, Fw::ParamValid::VALID);
+    this->component.loadParameters();
+    ASSERT_EVENTS_MountZeroInvalid_SIZE(1);
+    this->invoke_to_lookAngleIn(0, 222.9, 85.0);
+    this->expectMountCommand(0, MountAction::SET, 0.0, 85.0);
+}
+
 // ----------------------------------------------------------------------
 // Helper functions
 // ----------------------------------------------------------------------

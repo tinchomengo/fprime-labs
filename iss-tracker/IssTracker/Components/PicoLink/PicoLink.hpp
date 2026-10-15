@@ -122,6 +122,14 @@ class PicoLink final : public PicoLinkComponentBase {
     bool m_linkOpen = false;       //!< The driver reported the port open
     bool m_heartbeatSet = false;   //!< HEARTBEAT sent since the link opened or the Pico rebooted
     bool m_sentThisCycle = false;  //!< A line was sent since the last schedIn
+    U32 m_cyclesWithoutData = 0;   //!< schedIn cycles since the last line from the Pico
+    bool m_silenceReported = false;  //!< PicoSilent emitted for the current silence
+
+  public:
+    //! Rate group cycles (seconds) without data before PicoSilent
+    static constexpr U32 SILENCE_LIMIT_CYCLES = 3;
+
+  private:
 
     // Receive state, only used on the driver's receive thread
     char m_line[PicoProtocol::MAX_LINE];

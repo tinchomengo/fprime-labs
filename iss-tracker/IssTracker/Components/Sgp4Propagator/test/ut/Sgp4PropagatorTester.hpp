@@ -53,6 +53,12 @@ class Sgp4PropagatorTester final : public Sgp4PropagatorGTestBase {
     //! LOAD_TLE ignores trailing whitespace from copy-paste
     void testLoadTleIgnoresTrailingWhitespace();
 
+    //! LOAD_TLE_FILE reads CelesTrak's format and reports unreadable files
+    void testLoadTleFile();
+
+    //! A TLE more than 72 h from the propagation time is loaded with a warning
+    void testTleOld();
+
     //! With no TLE, the rate group warns once and PREDICT_PASS fails
     void testNoTle();
 
@@ -71,8 +77,14 @@ class Sgp4PropagatorTester final : public Sgp4PropagatorGTestBase {
     //! SIM_CLOCK_STOP returns to the real clock
     void testSimClockStop();
 
+    //! SIM_OBSERVER overrides the observer until SIM_CLOCK_STOP
+    void testSimObserver();
+
     //! PREDICT_PASS finds the virtual pass, and reports when there is none
     void testPredictPass();
+
+    //! PASS_MIN_ELEVATION_DEG makes PREDICT_PASS skip low passes
+    void testPassMinElevation();
 
     //! Out-of-range observer parameters are rejected and the old location is kept
     void testObserverRejectsOutOfRange();

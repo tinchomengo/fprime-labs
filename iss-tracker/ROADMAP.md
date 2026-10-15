@@ -27,8 +27,9 @@ position limits and a heartbeat enforced on the Pico.
 - Done: `AntennaController` and `PicoLink` connect the propagator to the
   mount. A simulated pass test drives the mount through a real ISS pass
   seen from a virtual observer (see [COMMANDS.md](COMMANDS.md)).
-- Next: tracking from real data (observer location, current TLE, real
-  clock), and a browser view of the pass.
+- Done: tracking a real pass from the current TLE, the observer location
+  and the real clock. First real pass tracked on 2026-10-12.
+- Next: a browser view of the pass.
 
 ## Stage 4 — Demo (planned)
 
@@ -36,8 +37,9 @@ Track an ISS pass.
 
 ## Simplifications
 
-- Azimuth is open-loop: steps are counted from a manual north alignment,
+- Azimuth is open-loop: steps are counted from a manual compass alignment,
   with no encoder.
-- Azimuth travel is limited to ±90° by the servo cable.
+- Azimuth travel is limited to ±90° by the servo cable, so the mount is
+  turned by hand to face the middle of each pass.
 - SGP4 accuracy depends on the age of the TLE.
 - Elevation calibration is linear and set by eye.

@@ -11,15 +11,15 @@
 namespace IssTracker {
 namespace TrackLogic {
 
-double mountAzimuth(double compassAzimuthDeg) {
-    double azimuth = std::fmod(compassAzimuthDeg, 360.0);
+double mountAzimuth(double compassAzimuthDeg, double mountZeroDeg) {
+    double azimuth = std::fmod(compassAzimuthDeg - mountZeroDeg, 360.0);
     if (azimuth < 0.0) {
         azimuth += 360.0;
     }
     return azimuth > 180.0 ? azimuth - 360.0 : azimuth;
 }
 
-Decision decide(Phase phase, double compassAzimuthDeg, double elevationDeg) {
+Decision decide(Phase phase, double compassAzimuthDeg, double elevationDeg, double mountZeroDeg) {
     Decision decision;
     decision.nextPhase = phase;
 
@@ -39,10 +39,14 @@ Decision decide(Phase phase, double compassAzimuthDeg, double elevationDeg) {
         decision.nextPhase = Phase::TRACKING;
     }
 
-    const double azimuth = mountAzimuth(compassAzimuthDeg);
-    if (std::fabs(azimuth) > AZ_LIMIT_DEG) {
+    double azimuth = mountAzimuth(compassAzimuthDeg, mountZeroDeg);
+    if (std::fabs(azimuth) > AZ_LIMIT_DEG + AZ_CLAMP_MARGIN_DEG) {
         decision.azimuthOutOfRange = true;
         return decision;
+    }
+    if (std::fabs(azimuth) > AZ_LIMIT_DEG) {
+        azimuth = azimuth > 0.0 ? AZ_LIMIT_DEG : -AZ_LIMIT_DEG;
+        decision.azimuthClamped = true;
     }
 
     decision.action = Decision::Action::POINT;

@@ -49,6 +49,11 @@ TEST(PicoLink, LongLineDropped) {
     tester.testLongLineDropped();
 }
 
+TEST(PicoLink, SilenceDetected) {
+    IssTracker::PicoLinkTester tester;
+    tester.testSilenceDetected();
+}
+
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

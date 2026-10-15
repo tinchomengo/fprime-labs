@@ -115,6 +115,10 @@ void setupTopology(const TopologyState& state) {
 
     // Project-specific component configuration. Function provided above. May be inlined, if desired.
     configureTopology();
+    // Autocoded: reads PrmDb.dat into the parameter database. The generated
+    // template only called loadParameters(), so saved parameters (such as the
+    // observer location) were never read and every component used its defaults.
+    readParameters();
     // Autocoded parameter loading. Function provided by autocoder.
     loadParameters();
     // Autocoded task kick-off (active components). Function provided by autocoder.

@@ -31,12 +31,15 @@ struct LookSample {
     double rangeKm;
 };
 
-//! Pass times (Unix seconds) and peak elevation
+//! Pass times (Unix seconds), peak elevation, and the middle and width of the
+//! azimuth swept from AOS to LOS
 struct PassReference {
     double aosUnix;
     double tcaUnix;
     double losUnix;
     double maxElevationDeg;
+    double azimuthCenterDeg;
+    double azimuthSpanDeg;
 };
 
 // Simulated test pass: a virtual observer directly south of the ISS ground
@@ -54,7 +57,7 @@ const LookSample VIRTUAL_70_SAMPLES[] = {
     {"2026-10-10T17:52:00", 87.2170, 1.2923, 2239.683},
 };
 // AOS 17:41:18.92  TCA 17:46:49.91  LOS 17:52:20.29 UTC
-const PassReference VIRTUAL_70_PASS = {1791654078.9, 1791654409.9, 1791654740.3, 69.9996};
+const PassReference VIRTUAL_70_PASS = {1791654078.9, 1791654409.9, 1791654740.3, 69.9996, 359.965, 175.138};
 
 // Real pass over central Buenos Aires on 2026-10-11, peaking at 86 deg:
 // close to overhead, so the azimuth swings ~180 deg through the peak
@@ -70,7 +73,7 @@ const LookSample BUENOS_AIRES_86_SAMPLES[] = {
     {"2026-10-11T22:19:00", 133.1294, 3.9869, 1980.109},
 };
 // AOS 22:09:00.18  TCA 22:14:27.49  LOS 22:19:58.79 UTC
-const PassReference BUENOS_AIRES_86_PASS = {1791756540.2, 1791756867.5, 1791757198.8, 85.9456};
+const PassReference BUENOS_AIRES_86_PASS = {1791756540.2, 1791756867.5, 1791757198.8, 85.9456, 222.900, 180.203};
 
 // ----------------------------------------------------------------------
 // Tolerances. Skyfield and libsgp4 agree to ~0.005 deg and ~30 m on these
@@ -86,6 +89,8 @@ constexpr double RANGE_TOLERANCE_KM = 0.2;
 constexpr double PASS_TIME_TOLERANCE_S = 1.0;
 //! Peak elevation difference, degrees
 constexpr double MAX_ELEVATION_TOLERANCE_DEG = 0.02;
+//! Azimuth centre and span difference, degrees (1 s sampling against 0.5 s)
+constexpr double AZIMUTH_RANGE_TOLERANCE_DEG = 0.1;
 
 //! Angle between two sky directions, degrees. Used instead of comparing
 //! azimuths directly, which swing quickly near the zenith.

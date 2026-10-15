@@ -144,6 +144,35 @@ void PicoLinkTester ::testLongLineDropped() {
     ASSERT_TLM_State(0, MountState::STOWED);
 }
 
+void PicoLinkTester ::testSilenceDetected() {
+    // openLink() runs the first cycle; nothing has arrived since
+    this->openLink();
+    this->invoke_to_schedIn(0, 0);
+    ASSERT_EVENTS_PicoSilent_SIZE(0);
+    this->invoke_to_schedIn(0, 0);
+    ASSERT_EVENTS_PicoSilent_SIZE(1);
+    ASSERT_EVENTS_PicoSilent(0, PicoLink::SILENCE_LIMIT_CYCLES);
+
+    // Reported once per silence, not every cycle
+    this->invoke_to_schedIn(0, 0);
+    ASSERT_EVENTS_PicoSilent_SIZE(1);
+
+    // Data again: reported, and the count restarts
+    this->receive("TLM 0.00 90.00 DISABLED\n");
+    ASSERT_EVENTS_PicoResponding_SIZE(1);
+    this->clearHistory();
+    this->invoke_to_schedIn(0, 0);
+    this->invoke_to_schedIn(0, 0);
+    ASSERT_EVENTS_PicoSilent_SIZE(0);
+
+    // Regular telemetry keeps it quiet
+    for (int i = 0; i < 10; i++) {
+        this->receive("TLM 0.00 90.00 DISABLED\n");
+        this->invoke_to_schedIn(0, 0);
+    }
+    ASSERT_EVENTS_PicoSilent_SIZE(0);
+}
+
 // ----------------------------------------------------------------------
 // Handlers for typed from ports
 // ----------------------------------------------------------------------

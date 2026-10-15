@@ -67,6 +67,9 @@ class PicoLinkTester final : public PicoLinkGTestBase {
     //! Over-long lines are dropped without losing the next one
     void testLongLineDropped();
 
+    //! Silence from the Pico is reported once, and its end too
+    void testSilenceDetected();
+
   private:
     // ----------------------------------------------------------------------
     // Handlers for typed from ports

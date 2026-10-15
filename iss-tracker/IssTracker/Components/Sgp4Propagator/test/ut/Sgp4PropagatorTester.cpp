@@ -7,6 +7,8 @@
 #include "Sgp4PropagatorTester.hpp"
 
 #include <cmath>
+#include <cstdio>
+#include <fstream>
 #include <string>
 
 #include "IssTracker/Components/Sgp4Propagator/OrbitMath.hpp"
@@ -51,6 +53,52 @@ void Sgp4PropagatorTester ::testLoadTle() {
     EXPECT_STREQ(this->eventHistory_TleLoaded->at(0).epoch.toChar(), Oracle::TLE_EPOCH_TEXT);
     EXPECT_NEAR(this->eventHistory_TleLoaded->at(0).ageHours, (WALL_CLOCK_UNIX - Oracle::TLE_EPOCH_UNIX) / 3600.0,
                 1.0e-3);
+    ASSERT_EVENTS_TleOld_SIZE(0);  // 18.8 h old: fine
+}
+
+void Sgp4PropagatorTester ::testLoadTleFile() {
+    // As tools/fetch_tle.py saves it: CelesTrak's three-line format, CRLF endings
+    const char* path = "/tmp/isstracker_ut_tle.txt";
+    {
+        std::ofstream file(path, std::ios::binary);
+        file << "ISS (ZARYA)             \r\n" << Oracle::TLE_LINE1 << "\r\n" << Oracle::TLE_LINE2 << "\r\n";
+    }
+    this->sendCmd_LOAD_TLE_FILE(0, 11, Fw::CmdStringArg(path));
+    ASSERT_CMD_RESPONSE(0, Sgp4PropagatorComponentBase::OPCODE_LOAD_TLE_FILE, 11, Fw::CmdResponse::OK);
+    ASSERT_EVENTS_TleLoaded_SIZE(1);
+    EXPECT_STREQ(this->eventHistory_TleLoaded->at(0).epoch.toChar(), Oracle::TLE_EPOCH_TEXT);
+
+    // A file that isn't a TLE (e.g. an error page saved by mistake)
+    this->clearHistory();
+    {
+        std::ofstream file(path, std::ios::binary);
+        file << "<html>No GP data found</html>\n";
+    }
+    this->sendCmd_LOAD_TLE_FILE(0, 12, Fw::CmdStringArg(path));
+    ASSERT_CMD_RESPONSE(0, Sgp4PropagatorComponentBase::OPCODE_LOAD_TLE_FILE, 12, Fw::CmdResponse::EXECUTION_ERROR);
+    ASSERT_EVENTS_TleFileError_SIZE(1);
+    EXPECT_STREQ(this->eventHistory_TleFileError->at(0).reason.toChar(), "no TLE lines found");
+    std::remove(path);
+
+    // A missing file
+    this->clearHistory();
+    this->sendCmd_LOAD_TLE_FILE(0, 13, Fw::CmdStringArg("/tmp/isstracker_ut_missing.txt"));
+    ASSERT_CMD_RESPONSE(0, Sgp4PropagatorComponentBase::OPCODE_LOAD_TLE_FILE, 13, Fw::CmdResponse::EXECUTION_ERROR);
+    ASSERT_EVENTS_TleFileError_SIZE(1);
+    EXPECT_STREQ(this->eventHistory_TleFileError->at(0).reason.toChar(), "cannot open the file");
+
+    // The TLE loaded first is still in use
+    this->invoke_to_schedIn(0, 0);
+    ASSERT_TLM_Azimuth_SIZE(1);
+}
+
+void Sgp4PropagatorTester ::testTleOld() {
+    // Five days after the TLE epoch
+    this->setWallClock(Oracle::TLE_EPOCH_UNIX + 5.0 * 86400.0);
+    this->sendCmd_LOAD_TLE(0, 14, Fw::CmdStringArg(Oracle::TLE_LINE1), Fw::CmdStringArg(Oracle::TLE_LINE2));
+    ASSERT_CMD_RESPONSE(0, Sgp4PropagatorComponentBase::OPCODE_LOAD_TLE, 14, Fw::CmdResponse::OK);
+    ASSERT_EVENTS_TleOld_SIZE(1);
+    EXPECT_NEAR(this->eventHistory_TleOld->at(0).ageHours, 120.0, 1.0e-3);
 }
 
 void Sgp4PropagatorTester ::testLoadTleRejectsGarbage() {
@@ -180,6 +228,33 @@ void Sgp4PropagatorTester ::testSimClockStop() {
     EXPECT_STREQ(this->tlmHistory_PropagationTime->at(0).arg.toChar(), "2026-10-11T23:00:00");
 }
 
+void Sgp4PropagatorTester ::testSimObserver() {
+    // The observer parameters stay at their default, central Buenos Aires
+    this->loadIssTle();
+
+    this->sendCmd_SIM_OBSERVER(0, 15, Oracle::VIRTUAL_70_LAT, Oracle::VIRTUAL_70_LON, Oracle::VIRTUAL_70_ALT_M);
+    ASSERT_CMD_RESPONSE(0, Sgp4PropagatorComponentBase::OPCODE_SIM_OBSERVER, 15, Fw::CmdResponse::OK);
+    ASSERT_EVENTS_SimObserverSet_SIZE(1);
+    ASSERT_EVENTS_ObserverSet_SIZE(0);  // the parameters are untouched
+
+    // Simulated observer and clock: the virtual pass
+    this->startSimClock(Oracle::VIRTUAL_70_SAMPLES[2].utc, 1.0);
+    this->expectLookAngle(Oracle::VIRTUAL_70_SAMPLES[2]);
+
+    // Stopping the simulation restores the real clock and the parameter observer
+    this->clearHistory();
+    this->sendCmd_SIM_CLOCK_STOP(0, 16);
+    ASSERT_CMD_RESPONSE(0, Sgp4PropagatorComponentBase::OPCODE_SIM_CLOCK_STOP, 16, Fw::CmdResponse::OK);
+    this->setWallClock(unixOf(Oracle::BUENOS_AIRES_86_SAMPLES[2].utc));
+    this->expectLookAngle(Oracle::BUENOS_AIRES_86_SAMPLES[2]);
+
+    // Out-of-range simulated observers are rejected
+    this->clearHistory();
+    this->sendCmd_SIM_OBSERVER(0, 17, 95.0, 0.0, 0.0);
+    ASSERT_CMD_RESPONSE(0, Sgp4PropagatorComponentBase::OPCODE_SIM_OBSERVER, 17, Fw::CmdResponse::VALIDATION_ERROR);
+    ASSERT_EVENTS_ObserverInvalid_SIZE(1);
+}
+
 void Sgp4PropagatorTester ::testPredictPass() {
     this->setObserver(Oracle::VIRTUAL_70_LAT, Oracle::VIRTUAL_70_LON, Oracle::VIRTUAL_70_ALT_M);
     this->loadIssTle();
@@ -199,13 +274,55 @@ void Sgp4PropagatorTester ::testPredictPass() {
     EXPECT_GT(pass.aosAzimuth, 270.0);
     EXPECT_LT(pass.losAzimuth, 90.0);
 
+    // Where to face the mount: the middle of the azimuth path, just west of north
+    ASSERT_EVENTS_PassAzimuthRange_SIZE(1);
+    const auto& range = this->eventHistory_PassAzimuthRange->at(0);
+    EXPECT_NEAR(range.span, Oracle::VIRTUAL_70_PASS.azimuthSpanDeg, Oracle::AZIMUTH_RANGE_TOLERANCE_DEG);
+    EXPECT_LT(std::fabs(std::remainder(range.center - Oracle::VIRTUAL_70_PASS.azimuthCenterDeg, 360.0)),
+              Oracle::AZIMUTH_RANGE_TOLERANCE_DEG);
+
     // The ISS never rises for an observer near the South Pole
     this->clearHistory();
     this->setObserver(-89.0, 0.0, 0.0);
     this->sendCmd_PREDICT_PASS(0, 10);
     ASSERT_CMD_RESPONSE(0, Sgp4PropagatorComponentBase::OPCODE_PREDICT_PASS, 10, Fw::CmdResponse::OK);
     ASSERT_EVENTS_NoPassFound_SIZE(1);
-    ASSERT_EVENTS_NoPassFound(0, Sgp4Propagator::PASS_SEARCH_HOURS);
+    ASSERT_EVENTS_NoPassFound(0, 10.0, Sgp4Propagator::PASS_SEARCH_HOURS);
+}
+
+void Sgp4PropagatorTester ::testPassMinElevation() {
+    // Buenos Aires after the 86 deg pass: next passes peak at 12.4, 4.0, 6.1
+    // and 24.5 deg (Skyfield)
+    this->setObserver(Oracle::BUENOS_AIRES_LAT, Oracle::BUENOS_AIRES_LON, Oracle::BUENOS_AIRES_ALT_M);
+    this->loadIssTle();
+    this->startSimClock("2026-10-11T22:25:00", 1.0);
+
+    // AOS times from Skyfield; the event shows them rounded to the second
+    const F64 lowPassAos = 1791762425.3;   // 2026-10-11 23:47:05.3, peaks at 12.4 deg
+    const F64 highPassAos = 1791780063.6;  // 2026-10-12 04:41:03.6, peaks at 24.5 deg
+
+    // Default minimum, 10 deg: the 12.4 deg pass
+    this->sendCmd_PREDICT_PASS(0, 18);
+    ASSERT_EVENTS_PassPredicted_SIZE(1);
+    EXPECT_NEAR(unixOf(this->eventHistory_PassPredicted->at(0).aos.toChar()), lowPassAos, 1.0);
+
+    // 13 deg: the three low passes are skipped
+    this->clearHistory();
+    this->paramSet_PASS_MIN_ELEVATION_DEG(13.0, Fw::ParamValid::VALID);
+    this->paramSend_PASS_MIN_ELEVATION_DEG(0, 19);
+    this->sendCmd_PREDICT_PASS(0, 20);
+    ASSERT_EVENTS_PassPredicted_SIZE(1);
+    EXPECT_NEAR(unixOf(this->eventHistory_PassPredicted->at(0).aos.toChar()), highPassAos, 1.0);
+    EXPECT_NEAR(this->eventHistory_PassPredicted->at(0).maxElevation, 24.547, Oracle::MAX_ELEVATION_TOLERANCE_DEG);
+
+    // Out of range: rejected, 13 deg still in use
+    this->clearHistory();
+    this->paramSet_PASS_MIN_ELEVATION_DEG(90.0, Fw::ParamValid::VALID);
+    this->paramSend_PASS_MIN_ELEVATION_DEG(0, 21);
+    ASSERT_EVENTS_PassMinElevationInvalid_SIZE(1);
+    this->sendCmd_PREDICT_PASS(0, 22);
+    ASSERT_EVENTS_PassPredicted_SIZE(1);
+    EXPECT_NEAR(unixOf(this->eventHistory_PassPredicted->at(0).aos.toChar()), highPassAos, 1.0);
 }
 
 void Sgp4PropagatorTester ::testObserverRejectsOutOfRange() {

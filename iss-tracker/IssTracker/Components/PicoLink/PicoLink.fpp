@@ -83,6 +83,19 @@ module IssTracker {
             format "Could not send to the Pico" \
             throttle 5
 
+        @ The link is open but nothing has arrived from the Pico. It normally
+        @ sends telemetry 5 times a second.
+        event PicoSilent(
+            seconds: U32 @< Time without data
+        ) \
+            severity warning high \
+            format "No data from the Pico for {} s: unplug and replug its USB cable, then restart fprime-gds"
+
+        @ Data from the Pico arrives again after PicoSilent
+        event PicoResponding() \
+            severity activity high \
+            format "The Pico is responding again"
+
         @ The Pico rejected a command
         event MountError(
             reply: string size 40 @< Reply from the Pico

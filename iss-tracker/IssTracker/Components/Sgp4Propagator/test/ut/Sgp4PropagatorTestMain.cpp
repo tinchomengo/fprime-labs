@@ -24,6 +24,16 @@ TEST(Sgp4PropagatorTle, IgnoresTrailingWhitespace) {
     tester.testLoadTleIgnoresTrailingWhitespace();
 }
 
+TEST(Sgp4PropagatorTle, LoadFromFile) {
+    IssTracker::Sgp4PropagatorTester tester;
+    tester.testLoadTleFile();
+}
+
+TEST(Sgp4PropagatorTle, Old) {
+    IssTracker::Sgp4PropagatorTester tester;
+    tester.testTleOld();
+}
+
 TEST(Sgp4PropagatorTle, NoTle) {
     IssTracker::Sgp4PropagatorTester tester;
     tester.testNoTle();
@@ -54,9 +64,19 @@ TEST(Sgp4PropagatorSimClock, Stop) {
     tester.testSimClockStop();
 }
 
+TEST(Sgp4PropagatorSimClock, SimObserver) {
+    IssTracker::Sgp4PropagatorTester tester;
+    tester.testSimObserver();
+}
+
 TEST(Sgp4PropagatorPass, Predict) {
     IssTracker::Sgp4PropagatorTester tester;
     tester.testPredictPass();
+}
+
+TEST(Sgp4PropagatorPass, MinElevation) {
+    IssTracker::Sgp4PropagatorTester tester;
+    tester.testPassMinElevation();
 }
 
 TEST(Sgp4PropagatorObserver, RejectsOutOfRange) {

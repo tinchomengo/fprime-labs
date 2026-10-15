@@ -53,8 +53,21 @@ class AntennaController final : public AntennaControllerComponentBase {
                                ) override;
 
     // ----------------------------------------------------------------------
+    // Parameter hooks
+    // ----------------------------------------------------------------------
+
+    //! Called once the parameters have been loaded at startup
+    void parametersLoaded() override;
+
+    //! Called whenever a parameter is set by command
+    void parameterUpdated(FwPrmIdType id) override;
+
+    // ----------------------------------------------------------------------
     // Helpers
     // ----------------------------------------------------------------------
+
+    //! Reads MOUNT_ZERO_AZ_DEG and applies it if it's in range
+    void updateMountZero();
 
     //! Sends a command to the mount, if the port is connected
     void sendToMount(MountAction::T action, F64 azimuthDeg, F64 elevationDeg);
@@ -63,6 +76,7 @@ class AntennaController final : public AntennaControllerComponentBase {
     void setPhase(TrackLogic::Phase phase);
 
     TrackLogic::Phase m_phase = TrackLogic::Phase::IDLE;
+    F64 m_mountZeroDeg = 0.0;  //!< Compass direction the mount's zero faces
 };
 
 }  // namespace IssTracker
