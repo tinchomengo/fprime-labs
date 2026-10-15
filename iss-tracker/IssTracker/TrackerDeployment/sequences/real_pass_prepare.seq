@@ -1,0 +1,26 @@
+; Prepare a real ISS pass
+;
+; Before running:
+;   - python3 tools/fetch_tle.py (saves the current TLE to tle/iss.tle)
+;   - the observer location saved once (see COMMANDS.md)
+;
+; Loads the TLE, predicts the next pass, and lays the stick horizontal at the
+; mount's zero. Then, by hand (COMMANDS.md):
+;   1. Read PassAzimuthRange: the compass direction to face the mount's zero.
+;   2. Turn the whole mount until the stick points that way (true north).
+;   3. Set antennaController.MOUNT_ZERO_AZ_DEG to that direction.
+;   4. A couple of minutes before AOS: antennaController.TRACK_START.
+;
+; Run: TrackerDeployment.cmdSeq.CS_RUN "sequences/real_pass_prepare.bin" NO_BLOCK
+
+; Real clock and the saved observer, nothing left from a test or earlier pass
+R00:00:00 TrackerDeployment.antennaController.TRACK_STOP
+R00:00:00 TrackerDeployment.sgp4Propagator.SIM_CLOCK_STOP
+
+; Current TLE and the next pass
+R00:00:00 TrackerDeployment.sgp4Propagator.LOAD_TLE_FILE "tle/iss.tle"
+R00:00:00 TrackerDeployment.sgp4Propagator.PREDICT_PASS
+
+; Stick horizontal at the mount's zero, to aim the mount with a compass
+R00:00:00 TrackerDeployment.picoLink.MOUNT_ENABLE
+R00:00:00 TrackerDeployment.picoLink.MOUNT_SET 0.0 0.0

@@ -1,0 +1,35 @@
+; Simulated pass test, 10x (about 1.5 min)
+;
+; Replays a real ISS pass (TLE epoch 2026-10-11 04:14 UTC) seen from a
+; virtual observer placed so the pass peaks at 70 deg due north and stays
+; within the mount's +/-90 deg azimuth range. Same code path as real
+; tracking; only the observer and the clock are simulated.
+;
+; Expected: the mount waits on the horizon at az -88, tracks up to el 70 at
+; az 0, follows the pass down to az +88, stows, and is disabled at the end.
+; PREDICT_PASS reports AOS 17:41:19, TCA 17:46:50 (el 70.0), LOS 17:52:20.
+;
+; Compile:  see COMMANDS.md
+; Run:      TrackerDeployment.cmdSeq.CS_RUN "sequences/sim_pass_10x.bin" NO_BLOCK
+
+; Clear any tracking left from an interrupted run
+R00:00:00 TrackerDeployment.antennaController.TRACK_STOP
+
+; Virtual observer, until SIM_CLOCK_STOP (the saved observer location is untouched)
+R00:00:00 TrackerDeployment.sgp4Propagator.SIM_OBSERVER 50.4728 -107.842 0.0
+
+; The virtual pass is centred on north: mount zero faces north
+R00:00:00 TrackerDeployment.antennaController.MOUNT_ZERO_AZ_DEG_PRM_SET 0.0
+
+; Fixed TLE, from tools/data/iss-2026-10-11.tle
+R00:00:00 TrackerDeployment.sgp4Propagator.LOAD_TLE "1 25544U 98067A   26284.17638745  .00009430  00000+0  18014-3 0  9995" "2 25544  51.6312  86.0933 0006713 248.1316 111.8959 15.48821882589734"
+
+; One minute before the pass rises, at 10x
+R00:00:00 TrackerDeployment.sgp4Propagator.SIM_CLOCK_START "2026-10-10T17:40:19" 10.0
+R00:00:00 TrackerDeployment.sgp4Propagator.PREDICT_PASS
+R00:00:00 TrackerDeployment.antennaController.TRACK_START
+
+; The pass sets 72 s later and the mount stows; then end the simulation
+; (real clock and saved observer again) and disable the stepper
+R00:01:30 TrackerDeployment.sgp4Propagator.SIM_CLOCK_STOP
+R00:00:00 TrackerDeployment.picoLink.MOUNT_DISABLE
