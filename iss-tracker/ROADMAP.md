@@ -22,18 +22,24 @@ Skyfield in the unit tests.
 `firmware/pico-tracker` takes pointing commands over USB serial, with
 position limits and a heartbeat enforced on the Pico.
 
-## Stage 3 — F´ integration (in progress)
+## Stage 3 — F´ integration (done)
 
-- Done: `AntennaController` and `PicoLink` connect the propagator to the
-  mount. A simulated pass test drives the mount through a real ISS pass
-  seen from a virtual observer (see [COMMANDS.md](COMMANDS.md)).
-- Done: tracking a real pass from the current TLE, the observer location
-  and the real clock. First real pass tracked on 2026-10-12.
-- Next: a browser view of the pass.
+- `AntennaController` and `PicoLink` connect the propagator to the mount.
+- A simulated pass test drives the mount through a real ISS pass seen from
+  a virtual observer (see [COMMANDS.md](COMMANDS.md)).
+- Real passes are tracked from the current TLE, the observer location and
+  the real clock.
 
-## Stage 4 — Demo (planned)
+## Stage 4 — Demo (done)
 
-Track an ISS pass.
+Real ISS pass tracked from Buenos Aires recorded.
+
+## Possible extensions
+
+- A browser view of the pass.
+- Starting tracking automatically before each pass.
+- More azimuth travel, so the mount doesn't have to be turned for each pass.
+- An encoder or magnetometer for closed-loop azimuth.
 
 ## Simplifications
 
